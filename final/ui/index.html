@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DQ Platform — KPMG Data Quality</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  /* KPMG brand palette */
+  --kpmg-blue:#00338D;      /* KPMG primary blue */
+  --kpmg-blue2:#005EB8;     /* KPMG secondary blue */
+  --kpmg-light-blue:#00A3E0;/* KPMG light blue */
+  --kpmg-violet:#470A68;    /* KPMG violet */
+  --kpmg-purple:#6D2077;
+  --kpmg-teal:#009B8D;
+  --kpmg-green:#43B02A;
+  --kpmg-red:#BC2027;
+  --kpmg-amber:#F59F00;
+  --kpmg-gray1:#F0F0F0;
+  --kpmg-gray2:#D0D0CE;
+  --kpmg-gray3:#9E9E9E;
+  --kpmg-dark:#2D2D2D;
+
+  --bg:#F4F5F7; --white:#ffffff; --surface:#F8F9FC;
+  --border:#E2E8F0; --border2:#CBD5E1;
+  --primary:var(--kpmg-blue); --primary-light:#EBF0FA; --primary-dark:#001F6B;
+  --green:var(--kpmg-green); --green-bg:#F0FDF4; --green-border:#BBF7D0;
+  --red:var(--kpmg-red); --red-bg:#FEF2F2; --red-border:#FECACA;
+  --amber:var(--kpmg-amber); --amber-bg:#FFFBEB; --amber-border:#FDE68A;
+  --purple:var(--kpmg-violet); --purple-bg:#F5F0FF;
+  --gray:#64748B; --gray-light:#F1F5F9;
+  --text:#1A1A2E; --text2:#475569; --text3:#94A3B8;
+  --font:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+  --radius:10px; --radius-lg:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+
+/* KPMG Topbar */
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:0;padding:0 24px;height:64px;background:var(--kpmg-blue);border-bottom:3px solid var(--kpmg-light-blue);box-shadow:0 2px 12px rgba(0,51,141,.25);}
+.brand{display:flex;align-items:center;gap:14px;}
+.kpmg-logo{display:flex;align-items:center;height:36px;}
+.brand-divider{width:1px;height:32px;background:rgba(255,255,255,.25);margin:0 14px;}
+.brand-name{font-size:14px;font-weight:700;color:white;letter-spacing:.3px;}
+.brand-sub{font-size:10px;color:rgba(255,255,255,.65);margin-left:4px;letter-spacing:.5px;text-transform:uppercase;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.agents-badge{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:600;color:white;}
+.agents-dot{width:7px;height:7px;border-radius:50%;background:#43B02A;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.btn-dash{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:var(--radius);background:var(--kpmg-light-blue);color:white;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.btn-dash:hover{background:#0085be;}
+
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 64px);}
+.sidebar{width:240px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;}
+.sidebar-section{padding:0 12px;margin-bottom:24px;}
+.sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);padding:0 8px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;}
+.nav-item:hover{background:var(--gray-light);color:var(--text);}
+.nav-item.active{background:var(--primary-light);color:var(--primary);}
+.step-badge{width:20px;height:20px;border-radius:50%;background:var(--primary);color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-badge.done{background:var(--green);}
+.step-badge.pending{background:var(--border2);color:var(--text3);}
+
+.main{flex:1;padding:28px;max-width:1200px;}
+
+/* Section */
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;}
+.section-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-num.done{background:var(--green);}
+.section-title{font-size:15px;font-weight:700;}
+.section-sub{font-size:12px;color:var(--gray);margin-top:1px;}
+.section-body{padding:20px;}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:36px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:var(--primary-light);}
+.upload-icon{font-size:40px;margin-bottom:10px;}
+.upload-title{font-size:15px;font-weight:600;margin-bottom:4px;}
+.upload-sub{font-size:12px;color:var(--gray);}
+/* Source Selection Cards */
+.source-card{border:2px solid var(--border);border-radius:var(--radius-lg);padding:20px 16px;text-align:center;cursor:pointer;transition:all .18s;background:var(--white);}
+.source-card:hover{border-color:var(--primary);background:var(--primary-light);}
+.source-card.selected{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+.source-icon{font-size:32px;margin-bottom:8px;}
+.source-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.source-desc{font-size:11px;color:var(--gray);}
+/* Form inputs */
+.form-input{width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:var(--font);background:var(--white);color:var(--text);outline:none;transition:border-color .15s;}
+.form-input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(37,99,235,.12);}
+
+
+/* Table chips */
+.table-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.table-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:var(--green-bg);border:1.5px solid var(--green-border);font-size:12px;font-weight:600;color:var(--green);cursor:pointer;transition:all .15s;}
+.table-chip:hover{background:#dcfce7;}
+.table-chip.selected{background:var(--green);color:white;}
+.table-chip .tc-remove{margin-left:4px;opacity:.6;cursor:pointer;}
+.table-chip .tc-remove:hover{opacity:1;}
+
+/* Schema panel */
+.schema-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:16px;}
+.schema-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.rel-item{font-size:11px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;color:var(--text2);}
+.rel-item:last-child{border-bottom:none;}
+.pk-badge{display:inline-flex;padding:1px 7px;border-radius:10px;background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;}
+.fk-badge{display:inline-flex;padding:1px 7px;border-radius:10px;background:#ede9fe;color:#6d28d9;font-size:10px;font-weight:700;}
+
+/* Buttons */
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--radius);background:var(--primary);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-secondary{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:var(--radius);background:white;color:var(--text2);border:1px solid var(--border);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{background:var(--gray-light);}
+.btn-success{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:var(--radius);background:var(--green);color:white;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-success:hover{background:#15803d;}
+
+/* Info banner */
+.info-banner{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius);margin-bottom:16px;font-size:12px;line-height:1.6;}
+
+/* Template chips */
+.template-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:white;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;}
+.chip:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light);}
+.chip.focused{border-color:var(--primary);color:var(--primary);background:var(--primary-light);}
+
+/* Column rules table */
+.col-table{width:100%;border-collapse:separate;border-spacing:0;}
+.col-table th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:10px 14px;text-align:left;background:var(--surface);border-bottom:1px solid var(--border);}
+.col-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+.col-table tr:last-child td{border-bottom:none;}
+.col-table tr:hover td{background:var(--gray-light);}
+.col-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.col-badge-int{background:#eff6ff;color:#1d4ed8;}
+.col-badge-str{background:#f0fdf4;color:#15803d;}
+.col-badge-date{background:#fef3c7;color:#92400e;}
+.col-badge-float{background:#fdf4ff;color:#7e22ce;}
+.col-badge-bool{background:#fef2f2;color:#991b1b;}
+.col-name{font-weight:700;font-family:var(--mono);font-size:12px;color:var(--text);}
+.col-unique{font-size:11px;color:var(--text3);margin-top:2px;}
+.sample-values{display:flex;flex-wrap:wrap;gap:4px;}
+.sample-val{padding:2px 7px;border-radius:4px;background:var(--gray-light);font-family:var(--mono);font-size:11px;color:var(--text2);}
+.null-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;}
+.null-none{color:var(--green);}
+.null-some{color:var(--red);}
+.ai-rules{display:flex;flex-direction:column;gap:4px;}
+.ai-rule{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);margin-top:4px;flex-shrink:0;}
+.ai-dot.High{background:var(--red);}
+.ai-dot.Medium{background:var(--amber);}
+.ai-dot.Low{background:var(--green);}
+.ai-rule-code{font-size:10px;font-family:var(--mono);color:var(--text3);}
+
+/* Custom rule input */
+.custom-input-wrap{display:flex;flex-direction:column;gap:4px;}
+.custom-input{width:100%;padding:7px 10px;font-size:12px;font-family:var(--mono);background:var(--surface);border:1px solid var(--border);border-radius:6px;outline:none;transition:border-color .15s;}
+.custom-input:focus{border-color:var(--primary);background:white;}
+.custom-input.template-filled{border-color:var(--green);background:var(--green-bg);}
+.custom-input::placeholder{color:var(--text3);font-style:italic;}
+.add-rule-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#2563eb;background:#eff6ff;border:1px dashed #93c5fd;border-radius:5px;cursor:pointer;padding:4px 10px;margin-top:4px;font-weight:600;transition:all .15s;}
+.add-rule-btn:hover{background:#dbeafe;border-color:#2563eb;}
+.custom-rules-list{display:flex;flex-direction:column;gap:3px;margin-top:4px;}
+.custom-rule-item{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--purple-bg);border-radius:5px;font-size:11px;font-family:var(--mono);}
+.custom-rule-del{margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;}
+
+/* Pipeline stepper */
+.pipeline-stepper{display:flex;align-items:center;padding:20px;margin-bottom:20px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);}
+.ps-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;}
+.ps-icon{width:44px;height:44px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;background:white;transition:all .3s;}
+.ps-icon.active{border-color:var(--primary);background:var(--primary-light);animation:ps-pulse .8s infinite;}
+.ps-icon.done{border-color:var(--green);background:var(--green-bg);}
+@keyframes ps-pulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.15);}50%{box-shadow:0 0 0 8px rgba(37,99,235,.08);}}
+.ps-label{font-size:11px;font-weight:600;color:var(--text3);}
+.ps-label.active{color:var(--primary);}
+.ps-label.done{color:var(--green);}
+.ps-arrow{font-size:16px;color:var(--border2);margin:0 4px;margin-bottom:20px;}
+
+/* Console */
+.console{background:#0d1117;border-radius:var(--radius-lg);padding:16px 20px;font-family:var(--mono);font-size:12px;max-height:320px;overflow-y:auto;line-height:1.7;}
+.log-info{color:#58a6ff;}
+.log-success{color:#3fb950;}
+.log-warn{color:#d29922;}
+.log-error{color:#f85149;}
+.log-agent{color:#79c0ff;font-weight:700;}
+.log-done{color:#3fb950;font-size:14px;font-weight:700;}
+.log-start{color:#bc8cff;}
+
+/* Results */
+.results-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.res-kpi{padding:16px 18px;border-radius:var(--radius-lg);border:1px solid var(--border);background:white;text-align:center;}
+.res-kpi-n{font-size:32px;font-weight:700;}
+.res-kpi-l{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.results-table{width:100%;border-collapse:collapse;}
+.results-table th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);text-align:left;}
+.results-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;}
+.results-table tr:last-child td{border-bottom:none;}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-pass{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.badge-fail{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-error{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.badge-skip{background:var(--gray-light);color:var(--gray);border:1px solid var(--border);}
+.badge-crit{background:#fef2f2;color:#991b1b;}
+.badge-high{background:#fff7ed;color:#9a3412;}
+.badge-med{background:var(--amber-bg);color:var(--amber);}
+.badge-low{background:var(--green-bg);color:var(--green);}
+
+/* ── KPMG Dashboard ──────────────────────────────────────── */
+.dash-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.dash-kpi{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 16px;box-shadow:var(--shadow);border-top:3px solid var(--kpmg-blue);position:relative;overflow:hidden;}
+.dash-kpi::after{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;background:var(--primary-light);opacity:.5;}
+.dash-kpi-n{font-size:30px;font-weight:800;color:var(--kpmg-blue);}
+.dash-kpi-l{font-size:10px;color:var(--gray);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.dash-kpi-trend{font-size:11px;margin-top:6px;font-weight:600;}
+/* Health score ring */
+.health-ring-wrap{display:flex;align-items:center;gap:20px;margin-bottom:20px;}
+.health-score-card{background:linear-gradient(135deg,var(--kpmg-blue),var(--kpmg-blue2));border-radius:var(--radius-lg);padding:24px 28px;color:white;display:flex;align-items:center;gap:24px;flex:1;box-shadow:0 4px 16px rgba(0,51,141,.2);}
+.health-donut{position:relative;width:110px;height:110px;flex-shrink:0;}
+.health-donut svg{transform:rotate(-90deg);}
+.health-donut-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.health-pct{font-size:26px;font-weight:800;color:white;}
+.health-grade{font-size:11px;color:rgba(255,255,255,.75);font-weight:600;margin-top:1px;}
+.health-info h3{font-size:18px;font-weight:700;color:white;margin-bottom:4px;}
+.health-info p{font-size:12px;color:rgba(255,255,255,.75);line-height:1.6;}
+.health-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.hpill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(255,255,255,.15);color:white;}
+/* Exec Summary */
+.exec-summary-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);flex:1;}
+.exec-summary-card h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--kpmg-blue);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.exec-summary-card p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;}
+.exec-finding{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:6px;}
+.exec-finding.critical{background:#FEF2F2;border-left:3px solid var(--kpmg-red);}
+.exec-finding.warning{background:#FFFBEB;border-left:3px solid var(--kpmg-amber);}
+.exec-finding.good{background:#F0FDF4;border-left:3px solid var(--kpmg-green);}
+/* Charts grid */
+.dash-charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.dash-chart-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow);}
+.dash-chart-card.full-width{grid-column:1/-1;}
+.dash-chart-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--kpmg-blue);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.dash-chart-title span{font-size:10px;color:var(--gray);font-weight:500;text-transform:none;letter-spacing:0;}
+.chart-canvas-wrap{position:relative;height:200px;}
+.chart-canvas-wrap.tall{height:260px;}
+/* Null heatmap */
+.null-table{width:100%;border-collapse:collapse;font-size:11px;}
+.null-table th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:6px 10px;text-align:left;background:var(--surface);border-bottom:1px solid var(--border);}
+.null-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.null-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--kpmg-red),var(--kpmg-amber));display:inline-block;min-width:2px;}
+/* Token cost chart */
+.token-model-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.token-model-name{font-weight:600;width:140px;flex-shrink:0;font-family:var(--mono);font-size:11px;}
+.token-bar-wrap{flex:1;height:8px;background:var(--gray-light);border-radius:4px;overflow:hidden;}
+.token-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--kpmg-blue),var(--kpmg-light-blue));}
+.token-cost{font-size:11px;color:var(--text3);width:70px;text-align:right;flex-shrink:0;}
+/* KPMG footer strip on dashboard */
+.kpmg-dash-footer{background:var(--kpmg-blue);color:rgba(255,255,255,.6);font-size:10px;padding:10px 20px;text-align:center;border-radius:0 0 var(--radius-lg) var(--radius-lg);letter-spacing:.3px;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:12px 20px;border-radius:var(--radius);background:#1e293b;color:white;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;pointer-events:auto;}
+.toast.success{border-left:4px solid var(--green);}
+.toast.error{border-left:4px solid var(--red);}
+
+/* Rule Modal */
+.rule-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;}
+.rule-modal-overlay.open{display:flex;}
+.rule-modal-box{background:white;border-radius:14px;width:580px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.rule-modal-header{background:linear-gradient(135deg,#1e40af,#2563eb);border-radius:14px 14px 0 0;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;}
+.rule-modal-title{color:white;font-weight:700;font-size:16px;}
+.rule-modal-col{color:white;font-size:12px;opacity:.85;margin-top:2px;}
+.rule-modal-close{background:rgba(255,255,255,.2);border:none;color:white;width:30px;height:30px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.rule-modal-body{padding:22px 24px;}
+.rule-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rule-type-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 10px;border:2px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s;background:white;text-align:center;}
+.rule-type-card:hover{border-color:#2563eb;background:#eff6ff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.12);}
+.rule-type-icon{font-size:26px;line-height:1;}
+.rule-type-label{font-size:12px;font-weight:600;color:#374151;}
+.rf-group{margin-bottom:14px;}
+.rf-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#475569;margin-bottom:6px;}
+.rf-input{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none;transition:border-color .15s;box-sizing:border-box;}
+.rf-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.rf-select{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none;cursor:pointer;background:white;box-sizing:border-box;}
+.rf-select:focus{border-color:#2563eb;}
+.rf-textarea{width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none;resize:vertical;font-family:monospace;box-sizing:border-box;}
+.rf-textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.rf-desc{font-size:12px;color:#6b7280;background:#f8fafc;border-radius:6px;padding:8px 12px;border-left:3px solid #2563eb;margin-top:4px;}
+.rf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.rf-back{background:none;border:none;cursor:pointer;color:#6b7280;font-size:12px;display:flex;align-items:center;gap:4px;padding:0;margin-bottom:16px;}
+.rf-actions{margin-top:20px;display:flex;justify-content:flex-end;gap:8px;}
+.rf-btn-cancel{padding:8px 18px;border-radius:6px;border:1px solid #e2e8f0;background:white;font-size:13px;cursor:pointer;color:#475569;}
+.rf-btn-add{padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:white;font-size:13px;font-weight:600;cursor:pointer;}
+.rf-btn-add:hover{background:#1d4ed8;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <!-- KPMG Logo -->
+    <div class="kpmg-logo" style="display:flex;align-items:center;background:white;padding:6px 14px;border-radius:4px;">
+      <span style="font-family:'Arial Black',Arial,sans-serif;font-size:22px;font-weight:900;color:#00338D;letter-spacing:2px;">KPMG</span>
+    </div>
+    <div style="display:none">
+      <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" height="28" style="display:block;">
+        <!-- K -->
+        <rect x="4" y="6" width="8" height="48" fill="#00338D"/>
+        <polygon points="12,30 30,6 42,6 24,30 42,54 30,54" fill="#00338D"/>
+        <!-- P -->
+        <rect x="48" y="6" width="8" height="48" fill="#00338D"/>
+        <path d="M56,6 L72,6 Q86,6 86,18 Q86,30 72,30 L56,30 Z" fill="#00338D"/>
+        <!-- M -->
+        <rect x="94" y="6" width="8" height="48" fill="#00338D"/>
+        <polygon points="102,6 114,26 126,6 134,6 134,54 126,54 126,20 114,38 102,20 102,54 94,54 94,6" fill="#00338D"/>
+        <!-- G -->
+        <path d="M158,30 a22,22 0 1 1 0,0.1" fill="none" stroke="#00338D" stroke-width="8"/>
+        <rect x="158" y="26" width="18" height="8" fill="#00338D"/>
+        <!-- Blue square accent (KPMG brand mark) -->
+        <rect x="188" y="6" width="10" height="10" fill="#00338D"/>
+        <rect x="188" y="22" width="10" height="10" fill="#00A3E0"/>
+        <rect x="188" y="38" width="10" height="10" fill="#00338D"/>
+      </svg>
+    </div>
+    <div style="width:1px;height:32px;background:rgba(255,255,255,.3);margin:0 16px;"></div>
+    <div>
+      <div style="font-size:14px;font-weight:700;color:white;letter-spacing:.3px;">Data Quality Platform</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.65);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;">Agentic Validation · Google AI Studio</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="agents-badge">
+      <div class="agents-dot"></div>
+      <span>5 AI Agents Ready</span>
+    </div>
+    <button class="btn-dash" onclick="showDashboard()">📊 Dashboard</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pipeline</div>
+      <button class="nav-item active" id="nav1" onclick="jumpTo('step1')">
+        <span class="step-badge" id="sb1">1</span> Upload Data
+      </button>
+      <button class="nav-item" id="nav2" onclick="jumpTo('step2')">
+        <span class="step-badge pending" id="sb2">2</span> Schema Analysis
+      </button>
+      <button class="nav-item" id="nav3" onclick="jumpTo('step3')">
+        <span class="step-badge pending" id="sb3">3</span> Review Rules
+      </button>
+      <button class="nav-item" id="nav4" onclick="jumpTo('step4')">
+        <span class="step-badge pending" id="sb4">4</span> Run Pipeline
+      </button>
+      <button class="nav-item" id="nav5" onclick="jumpTo('step5')">
+        <span class="step-badge pending" id="sb5">5</span> Results
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <button class="nav-item" onclick="showDashboard()"><span>📊</span> Dashboard</button>
+      <button class="nav-item" onclick="showRunHistory()"><span>🕒</span> Run History</button>
+      <button class="nav-item" id="dl-sidebar" style="display:none" onclick="downloadCleaned()"><span>⬇️</span> Download Cleaned</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Agent Status</div>
+      <div id="agent-status" style="font-size:11px;padding:0 8px;line-height:1.9;color:var(--text3);">
+        ○ Connector<br>○ Profiler<br>○ Validator<br>○ Fixer<br>○ Reporter
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ═══ STEP 1: Data Source ═══ -->
+    <div class="section" id="step1">
+      <div class="section-header">
+        <div class="step-num" id="snum1">1</div>
+        <div>
+          <div class="section-title">Select Data Source</div>
+          <div class="section-sub">Where is your data stored?</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <!-- Source type cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+          <div class="source-card selected" id="src-ssms" onclick="selectSource('ssms')">
+            <div class="source-icon">🗄️</div>
+            <div class="source-name">SSMS</div>
+            <div class="source-desc">SQL Server</div>
+          </div>
+          <div class="source-card" id="src-csv" onclick="selectSource('csv')">
+            <div class="source-icon">📄</div>
+            <div class="source-name">CSV File</div>
+            <div class="source-desc">Comma separated</div>
+          </div>
+          <div class="source-card" id="src-excel" onclick="selectSource('excel')">
+            <div class="source-icon">📊</div>
+            <div class="source-name">Excel File</div>
+            <div class="source-desc">.xlsx format</div>
+          </div>
+        </div>
+
+        <!-- SSMS Panel -->
+        <div id="panel-ssms" style="display:block;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;">
+            <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;">🗄️ SQL Server Connection</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px;">SERVER / HOST</label>
+                <input id="ssms-server" class="form-input" type="text" placeholder="e.g. localhost\SQLEXPRESS">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px;">DATABASE</label>
+                <input id="ssms-database" class="form-input" type="text" placeholder="e.g. SalesDB">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px;">TABLE NAME</label>
+                <input id="ssms-table" class="form-input" type="text" placeholder="e.g. dbo.Orders">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px;">CUSTOM QUERY (optional)</label>
+                <input id="ssms-query" class="form-input" type="text" placeholder="SELECT TOP 10000 * FROM ...">
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;cursor:pointer;">
+                <input type="checkbox" id="ssms-winauth" onchange="toggleSsmsAuth()" style="accent-color:var(--primary);">
+                Windows Authentication
+              </label>
+            </div>
+            <div id="ssms-creds" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px;">USERNAME</label>
+                <input id="ssms-user" class="form-input" type="text" placeholder="sa">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--text3);display:block;margin-bottom:4px;">PASSWORD</label>
+                <input id="ssms-pass" class="form-input" type="password" placeholder="••••••••">
+              </div>
+            </div>
+            <button class="btn-primary" onclick="connectSSMS()">🔌 Connect &amp; Load Table</button>
+            <div id="ssms-status" style="margin-top:10px;font-size:12px;color:var(--text2);display:none;"></div>
+          </div>
+        </div>
+
+        <!-- CSV Panel -->
+        <div id="panel-csv" style="display:none;">
+          <div class="upload-zone" id="drop-zone-csv"
+               onclick="document.getElementById('file-inp-csv').click()"
+               ondragover="event.preventDefault();this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="handleDropCSV(event)">
+            <div class="upload-icon">📂</div>
+            <div class="upload-title">Click or drag &amp; drop CSV files here</div>
+            <div class="upload-sub">Multiple CSV files allowed — each becomes a separate table</div>
+          </div>
+          <input type="file" id="file-inp-csv" style="display:none" multiple accept=".csv"
+                 onchange="handleFiles(this.files)">
+        </div>
+
+        <!-- Excel Panel -->
+        <div id="panel-excel" style="display:none;">
+          <div class="upload-zone" id="drop-zone-excel"
+               onclick="document.getElementById('file-inp-excel').click()"
+               ondragover="event.preventDefault();this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="handleDropExcel(event)">
+            <div class="upload-icon">📊</div>
+            <div class="upload-title">Click or drag &amp; drop Excel files here</div>
+            <div class="upload-sub">Multiple .xlsx / .xls files — each sheet becomes a table</div>
+          </div>
+          <input type="file" id="file-inp-excel" style="display:none" multiple accept=".xlsx,.xls"
+                 onchange="handleFiles(this.files)">
+        </div>
+
+        <!-- Shared upload status -->
+        <div id="upload-status" style="margin-top:14px;display:none">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Loaded Tables — click to select for analysis:</div>
+          <div class="table-chips" id="table-chips"></div>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
+          <button class="btn-primary" id="analyze-schema-btn" style="display:none" onclick="analyzeSchema()">
+            🔍 Analyze Schema &amp; Relationships
+          </button>
+          <button class="btn-primary" id="load-rules-btn" style="display:none" onclick="loadColumnsAndRules()">
+            📋 Load Columns &amp; Generate AI Rules
+          </button>
+        </div>
+
+        <!-- Schema panel -->
+        <div class="schema-panel" id="schema-panel" style="display:none">
+          <div class="schema-title">🗂️ Schema Analysis — Keys &amp; Relationships</div>
+          <div id="schema-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 2: Schema (inline) ═══ -->
+
+    <!-- ═══ STEP 3: Review Rules ═══ -->
+    <div class="section" id="step3" style="display:none">
+      <div class="section-header">
+        <div class="step-num pending" id="snum3">3</div>
+        <div>
+          <div class="section-title">Review AI Rules &amp; Add Custom Rules</div>
+          <div class="section-sub">Review AI-generated rules and click <strong>+ Add Rule</strong> to add your own custom validation rules per column</div>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div style="overflow-x:auto;">
+          <table class="col-table">
+            <thead>
+              <tr>
+                <th style="width:150px">COLUMN</th>
+                <th style="width:80px">TYPE</th>
+                <th style="width:180px">SAMPLE VALUES</th>
+                <th style="width:80px">NULLS</th>
+                <th style="width:280px">🤖 AI RULES</th>
+                <th>✏️ CUSTOM RULES</th>
+              </tr>
+            </thead>
+            <tbody id="rules-tbody"></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:12px;color:var(--gray)" id="rules-summary"></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-secondary" onclick="toggleAllRules()">Toggle AI Rules</button>
+            <button class="btn-primary" onclick="proceedToRun()">Continue to Pipeline ▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 4: Run Pipeline ═══ -->
+    <div class="section" id="step4" style="display:none">
+      <div class="section-header">
+        <div class="step-num pending" id="snum4">4</div>
+        <div>
+          <div class="section-title">Run Agentic DQ Pipeline</div>
+          <div class="section-sub">5 AI agents: Connector → Profiler → Validator → Fixer → Reporter</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="pipeline-stepper">
+          <div class="ps-step"><div class="ps-icon" id="ps-connector">🔌</div><div class="ps-label" id="psl-connector">1. Connector</div></div>
+          <div class="ps-arrow">→</div>
+          <div class="ps-step"><div class="ps-icon" id="ps-profiler">🔬</div><div class="ps-label" id="psl-profiler">2. Profiler</div></div>
+          <div class="ps-arrow">→</div>
+          <div class="ps-step"><div class="ps-icon" id="ps-validator">✅</div><div class="ps-label" id="psl-validator">3. Validator</div></div>
+          <div class="ps-arrow">→</div>
+          <div class="ps-step"><div class="ps-icon" id="ps-fixer">🔧</div><div class="ps-label" id="psl-fixer">4. Fixer</div></div>
+          <div class="ps-arrow">→</div>
+          <div class="ps-step"><div class="ps-icon" id="ps-reporter">📊</div><div class="ps-label" id="psl-reporter">5. Reporter</div></div>
+        </div>
+
+        <div style="text-align:center;margin-bottom:20px" id="run-btn-wrap">
+          <button class="btn-success" id="run-btn" onclick="runPipeline()">▶ Run Agentic DQ Analysis</button>
+          <div style="font-size:11px;color:var(--gray);margin-top:6px;">Powered by Google Gemini Flash • Estimated: 20–90 seconds</div>
+        </div>
+
+        <div id="console-wrap" style="display:none">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px;">Pipeline Console</div>
+          <div class="console" id="console-output"></div>
+        </div>
+
+        <div id="inline-results" style="display:none;margin-top:20px">
+          <div class="results-grid">
+            <div class="res-kpi"><div class="res-kpi-n" id="r-total" style="color:var(--primary)">—</div><div class="res-kpi-l">Total Checks<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">rows × rules</div></div></div>
+            <div class="res-kpi"><div class="res-kpi-n" id="r-passed" style="color:var(--green)">—</div><div class="res-kpi-l">Passed Records<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">rows × rules that passed</div></div></div>
+            <div class="res-kpi"><div class="res-kpi-n" id="r-failed" style="color:var(--red)">—</div><div class="res-kpi-l">Failed Records<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">rows × rules that failed</div></div></div>
+            <div class="res-kpi"><div class="res-kpi-n" id="r-passrate" style="color:var(--purple)">—</div><div class="res-kpi-l">Pass Rate<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">passed ÷ total checks</div></div></div>
+            <div class="res-kpi"><div class="res-kpi-n" id="r-ai-rules" style="color:#d97706">—</div><div class="res-kpi-l">AI-Generated Rules<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">rules generated by AI</div></div></div>
+            <div class="res-kpi"><div class="res-kpi-n" id="r-custom-rules" style="color:#7c3aed">—</div><div class="res-kpi-l">Custom Rules<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">rules added manually</div></div></div>
+            <div class="res-kpi"><div class="res-kpi-n" id="r-tables" style="color:#0891b2">—</div><div class="res-kpi-l">Tables Validated<div style="font-size:9px;color:var(--text3);font-weight:400;margin-top:1px">distinct tables checked</div></div></div>
+          </div>
+          <div style="text-align:center;margin-top:8px">
+            <button class="btn-dash" onclick="showDashboard()">📊 Open Full Dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- ═══ STEP 5: Results ═══ -->
+    <div class="section" id="step5" style="display:none">
+      <div class="section-header">
+        <div class="step-num pending" id="snum5">5</div>
+        <div><div class="section-title">DQ Check Results</div><div class="section-sub">Detailed pass/fail breakdown — grouped by table and column</div></div>
+      </div>
+      <div class="section-body">
+        <!-- Per-table summary cards -->
+        <div id="table-summary-cards" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px"></div>
+        <div style="overflow-x:auto">
+          <table class="results-table">
+            <thead><tr><th>Table</th><th>Column</th><th>Rule</th><th>Status</th><th>Passed Records</th><th>Failed Records</th><th>Total Rows</th><th>Source</th><th>Fix</th></tr></thead>
+            <tbody id="results-tbody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn-secondary" onclick="downloadCleaned()">⬇️ Download cleaned_data.xlsx</button>
+          <button class="btn-dash" onclick="showDashboard()">📊 Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ KPMG DASHBOARD ═══ -->
+    <div class="section" id="dashboard-panel" style="display:none">
+      <!-- KPMG Header Bar -->
+      <div style="background:var(--kpmg-blue);padding:18px 24px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:white;letter-spacing:.3px;">Data Quality Analytics Dashboard</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;letter-spacing:.5px;text-transform:uppercase;">KPMG · Advisory · Data & Analytics</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);text-align:right;" id="dash-timestamp"></div>
+          <button class="btn-secondary" style="border-color:rgba(255,255,255,.3);color:white;background:rgba(255,255,255,.1);" onclick="hidePanel('dashboard-panel')">✕ Close</button>
+        </div>
+      </div>
+      <div class="section-body" style="background:var(--bg);">
+
+        <!-- ROW 1: KPI Cards -->
+        <div class="dash-kpi-row">
+          <div class="dash-kpi">
+            <div class="dash-kpi-n" id="d-runs" style="font-size:13px;font-weight:700;color:var(--kpmg-blue)">—</div>
+            <div class="dash-kpi-l">Records per Table</div>
+            <div class="dash-kpi-trend" style="color:var(--text3)">Row count by table</div>
+          </div>
+          <div class="dash-kpi" style="border-top-color:var(--kpmg-light-blue)">
+            <div class="dash-kpi-n" id="d-rules" style="color:var(--kpmg-light-blue)">—</div>
+            <div class="dash-kpi-l">Total Rules</div>
+            <div class="dash-kpi-trend" style="color:var(--text3)">Validation rules applied</div>
+          </div>
+          <div class="dash-kpi" style="border-top-color:var(--kpmg-green)">
+            <div class="dash-kpi-n" id="d-passed" style="color:var(--kpmg-green)">—</div>
+            <div class="dash-kpi-l">Passed Records</div>
+            <div class="dash-kpi-trend" style="color:var(--text3)">Records × rules passed</div>
+          </div>
+          <div class="dash-kpi" style="border-top-color:var(--kpmg-red)">
+            <div class="dash-kpi-n" id="d-failed" style="color:var(--kpmg-red)">—</div>
+            <div class="dash-kpi-l">Failed Records</div>
+            <div class="dash-kpi-trend" style="color:var(--text3)">Records × rules failed</div>
+          </div>
+          <div class="dash-kpi" style="border-top-color:var(--kpmg-amber)">
+            <div class="dash-kpi-n" id="d-risk" style="color:var(--kpmg-amber)">—%</div>
+            <div class="dash-kpi-l">Avg Fail Rate</div>
+            <div class="dash-kpi-trend" style="color:var(--text3)">Failed ÷ Total records</div>
+          </div>
+        </div>
+
+        <!-- ROW 2: Health Score + Executive Summary -->
+        <div class="health-ring-wrap">
+          <div class="health-score-card">
+            <div class="health-donut">
+              <svg width="110" height="110" viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="44" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="12"/>
+                <circle cx="55" cy="55" r="44" fill="none" stroke="white" stroke-width="12"
+                  id="health-arc" stroke-dasharray="0 276.46" stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:55px 55px;transition:stroke-dasharray .8s ease;"/>
+              </svg>
+              <div class="health-donut-label">
+                <div class="health-pct" id="health-pct">—</div>
+                <div class="health-grade" id="health-grade">Score</div>
+              </div>
+            </div>
+            <div class="health-info">
+              <h3>Table Health Score</h3>
+              <p id="health-desc">Run a pipeline to compute the overall data quality health score for this dataset.</p>
+              <div class="health-pills" id="health-pills"></div>
+            </div>
+          </div>
+          <div class="exec-summary-card">
+            <h4>📋 Executive Summary</h4>
+            <div id="exec-summary-body">
+              <p style="color:var(--text3);font-size:12px;">Run a pipeline to generate the executive summary.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 3: Charts Grid -->
+        <div class="dash-charts-grid">
+
+          <!-- Validation Check Results Distribution (Donut) -->
+          <div class="dash-chart-card">
+            <div class="dash-chart-title">Validation Check Results Distribution <span>Pass / Fail / Error</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-distribution"></canvas></div>
+          </div>
+
+          <!-- Failing Columns (Descending Bar Chart) -->
+          <div class="dash-chart-card">
+            <div class="dash-chart-title">Failing Columns <span>Descending order by failure count</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-failing-cols"></canvas></div>
+          </div>
+
+          <!-- Column-Level Null Chart per Table -->
+          <div class="dash-chart-card full-width">
+            <div class="dash-chart-title">Column-Level Null Analysis by Table <span>Null % per column</span></div>
+            <div class="chart-canvas-wrap tall"><canvas id="chart-nulls"></canvas></div>
+          </div>
+
+          <!-- Checks per Column -->
+          <div class="dash-chart-card">
+            <div class="dash-chart-title">Checks per Column <span>Rule coverage</span></div>
+            <div class="chart-canvas-wrap"><canvas id="chart-checks-per-col"></canvas></div>
+          </div>
+
+          <!-- Token Usage & Cost (Model Routing) -->
+          <div class="dash-chart-card">
+            <div class="dash-chart-title">Token Usage &amp; Cost — Model Routing <span>Google AI Studio</span></div>
+            <div id="token-model-breakdown" style="height:200px;overflow-y:auto;">
+              <div style="color:var(--text3);font-size:12px;padding:40px 0;text-align:center;">Run a pipeline to see token usage.</div>
+            </div>
+          </div>
+
+        </div>
+
+        
+
+        <!-- KPMG Footer -->
+        <div class="kpmg-dash-footer">
+          KPMG Data Quality Platform · Powered by Google AI Studio (Gemini 2.0 Flash) · Confidential — For internal use only
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RUN HISTORY ═══ -->
+    <div class="section" id="run-history-panel" style="display:none">
+      <div class="section-header">
+        <div class="step-num done">🕒</div>
+        <div><div class="section-title">Run History</div></div>
+        <button class="btn-secondary" style="margin-left:auto" onclick="hidePanel('run-history-panel')">✕ Close</button>
+      </div>
+      <div class="section-body">
+        <table class="results-table">
+          <thead><tr><th>Run ID</th><th>Date</th><th>Checks</th><th>Pass</th><th>Fail</th><th>Risk</th><th>Status</th></tr></thead>
+          <tbody id="run-hist-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════ STATE ════════════════════════════
+const S = {
+  sessionId: null,
+  tables: {},        // name → meta
+  selectedTables: [], // which tables selected
+  schema: null,
+  profile: null,
+  aiRules: {},
+  customRules: {},   // {col: [{logic,label,severity}]}
+  mergedRules: {},
+  runId: null,
+  results: [],
+  activeTemplate: null,  // currently selected chip text
+  sourceType: 'ssms',
+};
+
+// ═══════════════════════ STEP 1: SOURCE SELECTION ══════════════════════
+function selectSource(type) {
+  // Update card selection
+  ['ssms','csv','excel'].forEach(t => {
+    document.getElementById('src-' + t).classList.toggle('selected', t === type);
+    document.getElementById('panel-' + t).style.display = (t === type) ? 'block' : 'none';
+  });
+  S.sourceType = type;
+}
+
+function toggleSsmsAuth() {
+  const checked = document.getElementById('ssms-winauth').checked;
+  document.getElementById('ssms-creds').style.display = checked ? 'none' : 'grid';
+}
+
+async function connectSSMS() {
+  const server   = document.getElementById('ssms-server').value.trim();
+  const database = document.getElementById('ssms-database').value.trim();
+  const table    = document.getElementById('ssms-table').value.trim();
+  const query    = document.getElementById('ssms-query').value.trim();
+  const winauth  = document.getElementById('ssms-winauth').checked;
+  const username = document.getElementById('ssms-user').value.trim();
+  const password = document.getElementById('ssms-pass').value;
+
+  if (!server || !database || !table) {
+    toast('Server, database, and table name are required', 'error'); return;
+  }
+
+  const statusEl = document.getElementById('ssms-status');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--text2)';
+  statusEl.textContent = '⏳ Connecting to SQL Server...';
+  toast('Connecting to SQL Server...', 'info');
+
+  try {
+    const r = await fetch('/api/connect-ssms', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ server, database, table_name: table, query: query || null,
+                             use_windows_auth: winauth, username, password })
+    });
+    if (!r.ok) { const err = await r.json(); throw new Error(err.detail || 'Connection failed'); }
+    const d = await r.json();
+
+    S.sessionId = d.session_id;
+    S.tables = d.tables;
+    S.selectedTables = Object.keys(d.tables);
+
+    renderTableChips(d.tables);
+    document.getElementById('upload-status').style.display = 'block';
+    document.getElementById('analyze-schema-btn').style.display = 'inline-flex';
+    document.getElementById('load-rules-btn').style.display = 'inline-flex';
+    markStep(1, 'done');
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = '✓ Connected! ' + Object.keys(d.tables).length + ' table(s) loaded.';
+    toast('SQL Server connected ✓');
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = '✗ ' + e.message;
+    toast('Connection error: ' + e.message, 'error');
+  }
+}
+
+function handleDropCSV(ev) {
+  ev.preventDefault();
+  document.getElementById('drop-zone-csv').classList.remove('dragover');
+  handleFiles(ev.dataTransfer.files);
+}
+
+function handleDropExcel(ev) {
+  ev.preventDefault();
+  document.getElementById('drop-zone-excel').classList.remove('dragover');
+  handleFiles(ev.dataTransfer.files);
+}
+
+// Legacy drop handler kept for safety
+function handleDrop(ev) {
+  ev.preventDefault();
+  handleFiles(ev.dataTransfer.files);
+}
+
+async function handleFiles(fileList) {
+  if (!fileList || !fileList.length) return;
+  const fd = new FormData();
+  for (const f of fileList) fd.append('files', f);
+
+  toast('Uploading...', 'info');
+  try {
+    const r = await fetch('/api/upload', {method:'POST', body:fd});
+    if (!r.ok) throw new Error(await r.text());
+    const d = await r.json();
+
+    S.sessionId = d.session_id;
+    S.tables = d.tables;
+    S.selectedTables = Object.keys(d.tables);
+
+    renderTableChips(d.tables);
+    document.getElementById('upload-status').style.display = 'block';
+    document.getElementById('analyze-schema-btn').style.display = 'inline-flex';
+    document.getElementById('load-rules-btn').style.display = 'inline-flex';
+    markStep(1, 'done');
+    toast(`Uploaded ${Object.keys(d.tables).length} table(s) ✓`);
+  } catch(e) { toast('Upload error: ' + e.message, 'error'); }
+}
+
+function renderTableChips(tables) {
+  const container = document.getElementById('table-chips');
+  container.innerHTML = '';
+  for (const [name, meta] of Object.entries(tables)) {
+    const chip = document.createElement('div');
+    chip.className = 'table-chip selected';
+    chip.id = `chip-${name}`;
+    chip.innerHTML = `📄 <strong>${name}</strong> &nbsp;<span style="opacity:.7">${meta.row_count} rows · ${meta.col_count} cols</span>
+      <span class="tc-remove" onclick="toggleTable('${name}',this)">✕</span>`;
+    chip.onclick = (e) => { if (!e.target.classList.contains('tc-remove')) toggleTable(name, chip); };
+    container.appendChild(chip);
+  }
+}
+
+function toggleTable(name, el) {
+  const chip = document.getElementById(`chip-${name}`);
+  if (!chip) return;
+  const idx = S.selectedTables.indexOf(name);
+  if (idx > -1) {
+    S.selectedTables.splice(idx, 1);
+    chip.classList.remove('selected');
+  } else {
+    S.selectedTables.push(name);
+    chip.classList.add('selected');
+  }
+}
+
+async function analyzeSchema() {
+  if (!S.sessionId) { toast('Upload files first', 'error'); return; }
+  const btn = document.getElementById('analyze-schema-btn');
+  btn.disabled = true; btn.textContent = '⏳ Analyzing...';
+  try {
+    const r = await fetch(`/api/schema/${S.sessionId}`, {method:'POST'});
+    if (!r.ok) throw new Error(await r.text());
+    S.schema = await r.json();
+    renderSchemaPanel(S.schema);
+    document.getElementById('schema-panel').style.display = 'block';
+    markStep(2, 'done');
+    toast('Schema analyzed ✓');
+  } catch(e) { toast('Schema error: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '🔍 Analyze Schema & Relationships'; }
+}
+
+function renderSchemaPanel(schema) {
+  const el = document.getElementById('schema-content');
+  if (!schema || !schema.tables) {
+    el.innerHTML = '<div style="color:var(--gray);font-size:12px">No schema data available.</div>';
+    return;
+  }
+
+  const tables = schema.tables;
+  const rels = schema.relationships || [];
+  const joins = schema.recommended_joins || [];
+
+  // ── Build SVG diagram (Power BI style entity boxes) ──────────────────
+  const tableNames = Object.keys(tables);
+  const BOX_W = 220, ROW_H = 26, HEADER_H = 38, PAD = 40;
+  const cols_per_row = Math.min(tableNames.length, 3);
+  const positions = {};
+
+  // Assign grid positions
+  tableNames.forEach((name, i) => {
+    const cols_info = tables[name].columns ? Object.entries(tables[name].columns) : [];
+    const boxH = HEADER_H + Math.max(cols_info.length, 1) * ROW_H + 10;
+    const col = i % cols_per_row;
+    const row = Math.floor(i / cols_per_row);
+    positions[name] = { x: PAD + col * (BOX_W + 60), y: PAD + row * (boxH + 80), w: BOX_W, h: boxH, cols: cols_info };
+  });
+
+  // Calculate SVG total size
+  const maxX = Math.max(...Object.values(positions).map(p => p.x + p.w)) + PAD;
+  const maxY = Math.max(...Object.values(positions).map(p => p.y + p.h)) + PAD;
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${maxX}" height="${maxY}" style="font-family:Inter,sans-serif;display:block;">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2563eb"/>
+    </marker>
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000018"/>
+    </filter>
+  </defs>`;
+
+  // Draw relationship lines first (behind boxes)
+  rels.forEach(rel => {
+    const from = positions[rel.from_table];
+    const to   = positions[rel.to_table];
+    if (!from || !to) return;
+    const x1 = from.x + from.w, y1 = from.y + HEADER_H / 2;
+    const x2 = to.x,            y2 = to.y   + HEADER_H / 2;
+    const mx = (x1 + x2) / 2;
+    const conf = Math.round((rel.confidence||0.5)*100);
+    svg += `
+    <path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"
+          stroke="#2563eb" stroke-width="1.8" fill="none" stroke-dasharray="5,3" marker-end="url(#arrow)" opacity="0.7"/>
+    <rect x="${mx-28}" y="${(y1+y2)/2-9}" width="56" height="18" rx="9" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="${mx}" y="${(y1+y2)/2+4}" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="600">${rel.type||'rel'} ${conf}%</text>`;
+  });
+
+  // Draw table boxes
+  tableNames.forEach(name => {
+    const p = positions[name];
+    const tinfo = tables[name];
+    const cols_info = p.cols;
+    const pkCols = tinfo.primary_key_candidates || [];
+
+    // Card shadow + border
+    svg += `
+    <rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" fill="white"
+          stroke="#e2e8f0" stroke-width="1.5" filter="url(#card-shadow)"/>`;
+
+    // Header bar (blue gradient)
+    svg += `
+    <rect x="${p.x}" y="${p.y}" width="${p.w}" height="${HEADER_H}" rx="10" fill="#2563eb"/>
+    <rect x="${p.x}" y="${p.y + HEADER_H - 10}" width="${p.w}" height="10" fill="#2563eb"/>
+    <text x="${p.x+14}" y="${p.y+24}" font-size="13" font-weight="700" fill="white">⊞ ${name}</text>`;
+
+    // Row count badge
+    const rc = tinfo.description ? tinfo.description.match(/(\d+) rows/) : null;
+    if (tinfo.row_count || rc) {
+      const rowLabel = tinfo.row_count ? `${tinfo.row_count} rows` : rc[0];
+      svg += `<text x="${p.x + p.w - 10}" y="${p.y + 24}" font-size="10" fill="#bfdbfe" text-anchor="end">${rowLabel}</text>`;
+    }
+
+    // Column rows
+    cols_info.forEach(([colName, colMeta], ci) => {
+      const ry = p.y + HEADER_H + ci * ROW_H;
+      const isPK = pkCols.includes(colName) || colMeta.role === 'pk';
+      const isFK = colMeta.role === 'fk';
+      const rowFill = ci % 2 === 0 ? '#f8f9fb' : 'white';
+
+      svg += `<rect x="${p.x+1}" y="${ry}" width="${p.w-2}" height="${ROW_H}" fill="${rowFill}"/>`;
+
+      // Role badge
+      if (isPK) {
+        svg += `<rect x="${p.x+8}" y="${ry+7}" width="22" height="13" rx="6" fill="#fef3c7"/>
+                <text x="${p.x+19}" y="${ry+18}" font-size="9" fill="#92400e" font-weight="700" text-anchor="middle">PK</text>`;
+      } else if (isFK) {
+        svg += `<rect x="${p.x+8}" y="${ry+7}" width="22" height="13" rx="6" fill="#ede9fe"/>
+                <text x="${p.x+19}" y="${ry+18}" font-size="9" fill="#6d28d9" font-weight="700" text-anchor="middle">FK</text>`;
+      } else {
+        svg += `<circle cx="${p.x+19}" cy="${ry+13}" r="5" fill="#e2e8f0"/>`;
+      }
+
+      // Column name
+      const maxLen = 20;
+      const display = colName.length > maxLen ? colName.substring(0, maxLen) + '…' : colName;
+      svg += `<text x="${p.x+36}" y="${ry+17}" font-size="11" fill="#0f172a" font-weight="${isPK?'700':'400'}">${display}</text>`;
+
+      // dtype badge right-aligned
+      const dtype = (colMeta.description || colMeta.role || 'text').split(' ')[0].substring(0, 8);
+      svg += `<text x="${p.x+p.w-8}" y="${ry+17}" font-size="9" fill="#94a3b8" text-anchor="end">${dtype}</text>`;
+    });
+
+    // Bottom rounded corners fix
+    svg += `<rect x="${p.x+1}" y="${p.y+p.h-10}" width="${p.w-2}" height="9" rx="0" fill="${cols_info.length%2===0?'white':'#f8f9fb'}"/>`;
+    svg += `<rect x="${p.x}" y="${p.y+p.h-10}" width="${p.w}" height="10" rx="10" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>`;
+  });
+
+  svg += `</svg>`;
+
+  // ── Relationship list below diagram ─────────────────────────────────
+  let relHtml = '';
+  if (rels.length) {
+    relHtml += `<div style="font-size:12px;font-weight:700;color:var(--text2);margin:18px 0 8px;display:flex;align-items:center;gap:6px;">🔗 Relationships</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">`;
+    rels.forEach(rel => {
+      const conf = Math.round((rel.confidence||0.5)*100);
+      const color = conf >= 80 ? 'var(--green)' : conf >= 60 ? 'var(--amber)' : 'var(--gray)';
+      relHtml += `<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:white;border:1px solid var(--border);border-radius:8px;font-size:11px;">
+        <span style="font-weight:700;color:var(--primary);font-family:var(--mono)">${rel.from_table}</span>
+        <span style="color:var(--text3)">.${rel.from_col}</span>
+        <span style="color:var(--primary);font-size:14px;">→</span>
+        <span style="font-weight:700;color:#7c3aed;font-family:var(--mono)">${rel.to_table}</span>
+        <span style="color:var(--text3)">.${rel.to_col}</span>
+        <span style="margin-left:4px;padding:2px 7px;border-radius:10px;background:var(--gray-light);color:${color};font-weight:600">${rel.type||'—'} · ${conf}%</span>
+      </div>`;
+    });
+    relHtml += '</div>';
+  }
+
+  // ── Recommended Joins ────────────────────────────────────────────────
+  let joinHtml = '';
+  if (joins.length) {
+    joinHtml += `<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;">💡 Recommended Joins</div>`;
+    joins.forEach(j => {
+      joinHtml += `<div style="margin-bottom:8px;padding:10px 14px;background:#f8f9fb;border:1px solid var(--border);border-radius:8px;">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">${j.description||''}</div>
+        <code style="font-size:11px;color:var(--primary);font-family:var(--mono);white-space:pre-wrap">${j.sql||''}</code>
+      </div>`;
+    });
+  }
+
+  el.innerHTML = `
+    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:#f0f4ff;padding:16px;margin-bottom:4px;">
+      ${svg}
+    </div>
+    ${relHtml}
+    ${joinHtml}`;
+}
+
+// ═══════════════════════ STEP 3: RULES ═════════════════════
+async function loadColumnsAndRules() {
+  if (!S.sessionId) { toast('Upload files first', 'error'); return; }
+  const selected = S.selectedTables.length ? S.selectedTables : Object.keys(S.tables);
+  if (!selected.length) { toast('Select at least one table', 'error'); return; }
+
+  const btn = document.getElementById('load-rules-btn');
+  btn.disabled = true; btn.textContent = '⏳ Loading & generating rules...';
+  try {
+    const r = await fetch('/api/load-columns', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: S.sessionId, table_names: selected})
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const d = await r.json();
+    S.profile = d.profile;
+    S.aiRules = d.ai_rules || {};
+    renderRulesTable(d.profile, d.ai_rules);
+    markStep(3, 'active');
+    document.getElementById('step3').style.display = 'block';
+    document.getElementById('step3').scrollIntoView({behavior:'smooth'});
+    toast(`Loaded ${d.profile.col_count} columns with AI rules ✓`);
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '📋 Load Columns & Generate AI Rules'; }
+}
+
+const DTYPE_CLASS = {
+  int64:'col-badge-int', int32:'col-badge-int', float64:'col-badge-float',
+  object:'col-badge-str', bool:'col-badge-bool',
+  'datetime64[ns]':'col-badge-date', date:'col-badge-date'
+};
+
+function renderRulesTable(profile, aiRules) {
+  const tbody = document.getElementById('rules-tbody');
+  tbody.innerHTML = '';
+  S.customRules = {};
+
+  // Group columns by source table (populated when multiple CSVs uploaded)
+  const tableGroups = {};
+  profile.columns.forEach((col, idx) => {
+    const tbl = col.source_table || profile.table_name || 'Table';
+    if (!tableGroups[tbl]) tableGroups[tbl] = [];
+    tableGroups[tbl].push({ col, idx });
+  });
+
+  Object.entries(tableGroups).forEach(([tableName, entries]) => {
+    // ── Table header separator row ──
+    const sepRow = document.createElement('tr');
+    sepRow.innerHTML = `<td colspan="6" style="background:linear-gradient(90deg,#2563eb,#7c3aed);padding:8px 14px;border-radius:0;">
+      <span style="font-size:12px;font-weight:700;color:white;letter-spacing:.5px;">📄 ${tableName}</span>
+      <span style="font-size:11px;color:#bfdbfe;margin-left:8px;">${entries.length} columns</span>
+    </td>`;
+    tbody.appendChild(sepRow);
+
+    entries.forEach(({ col, idx }) => {
+      S.customRules[col.column] = [];
+      const colRules = aiRules[col.column] || [];
+      const dtClass = DTYPE_CLASS[col.dtype] || 'col-badge-str';
+      const nullHtml = col.null_count === 0
+        ? `<span class="null-badge null-none">✓ None</span>`
+        : `<span class="null-badge null-some">${col.null_count} nulls</span>`;
+      const samplesHtml = (col.samples||[]).map(s =>
+        `<span class="sample-val">${String(s).substring(0,12)}</span>`).join('');
+      const aiHtml = colRules.length ? colRules.map((r, ri) => `
+        <div class="ai-rule" id="air-${idx}-${ri}">
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <div class="ai-dot ${r.severity||'Medium'}"></div>
+            <div>
+              <div style="font-size:12px;font-weight:600">${r.label||r.logic||''}</div>
+              <div class="ai-rule-code">${(r.logic||'').substring(0,45)}</div>
+            </div>
+          </div>
+          <button onclick="deleteAiRule(${idx},'${col.column}',${ri})"
+            style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 4px;flex-shrink:0">✕</button>
+        </div>`).join('') : '<div style="color:var(--text3);font-size:12px;font-style:italic">No AI rules generated</div>';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><div class="col-name">${col.column}</div><div class="col-unique">${col.unique} unique</div></td>
+        <td><span class="col-badge ${dtClass}">${(col.dtype||'').split('[')[0]}</span></td>
+        <td><div class="sample-values">${samplesHtml}</div></td>
+        <td>${nullHtml}</td>
+        <td><div class="ai-rules" id="air-wrap-${idx}">${aiHtml}</div></td>
+        <td>
+          <div class="custom-input-wrap">
+            <div class="custom-rules-list" id="cl-${idx}"></div>
+            <button class="add-rule-btn" onclick="openRuleModal('${col.column}',${idx})">+ Add Rule</button>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+
+  const total = profile.columns.reduce((s,c) => s + (aiRules[c.column]||[]).length, 0);
+  const tableNames = [...new Set(profile.columns.map(c => c.source_table || profile.table_name || 'Table'))];
+  const tableSummary = tableNames.map(t => {
+    const cols = profile.columns.filter(c => (c.source_table||profile.table_name||'Table') === t);
+    const rules = cols.reduce((s,c) => s + (aiRules[c.column]||[]).length, 0);
+    return `${t}: ${cols.length} cols, ${rules} rules`;
+  }).join(' · ');
+  document.getElementById('rules-summary').textContent =
+    `${profile.col_count} columns · ${total} total AI rules · ${tableSummary}`;
+}
+
+// Template chip logic
+let _lastFocused = null;
+
+function selectTemplate(chip) {
+  // Toggle off if clicking same chip
+  if (S.activeTemplate === chip.dataset.tpl) {
+    S.activeTemplate = null;
+    document.querySelectorAll('.chip.focused').forEach(c => c.classList.remove('focused'));
+    document.getElementById('chip-hint').classList.remove('show');
+    return;
+  }
+  S.activeTemplate = chip.dataset.tpl;
+  document.querySelectorAll('.chip.focused').forEach(c => c.classList.remove('focused'));
+  chip.classList.add('focused');
+  document.getElementById('chip-hint').classList.add('show');
+
+  // If an input is already focused, fill it immediately
+  if (_lastFocused) {
+    _lastFocused.value = S.activeTemplate;
+    _lastFocused.classList.add('template-filled');
+    setTimeout(() => _lastFocused && _lastFocused.classList.remove('template-filled'), 1500);
+    S.activeTemplate = null;
+    chip.classList.remove('focused');
+    document.getElementById('chip-hint').classList.remove('show');
+  }
+}
+
+function onCustomFocus(input) {
+  _lastFocused = input;
+  if (S.activeTemplate) {
+    input.value = S.activeTemplate;
+    input.classList.add('template-filled');
+    setTimeout(() => input.classList.remove('template-filled'), 1500);
+    // Clear template selection
+    document.querySelectorAll('.chip.focused').forEach(c => c.classList.remove('focused'));
+    document.getElementById('chip-hint').classList.remove('show');
+    S.activeTemplate = null;
+  }
+}
+
+function addCustomRule(idx, col) {
+  const input = document.getElementById(`ci-${idx}`);
+  const val = input.value.trim();
+  if (!val) { input.focus(); input.classList.add('template-filled'); setTimeout(()=>input.classList.remove('template-filled'),800); return; }
+  S.customRules[col] = S.customRules[col] || [];
+  S.customRules[col].push({logic: val, label: val, severity: 'Medium', source: 'custom'});
+  const list = document.getElementById(`cl-${idx}`);
+  const item = document.createElement('div');
+  item.className = 'custom-rule-item';
+  const ruleIdx = S.customRules[col].length - 1;
+  item.innerHTML = `<span style="color:var(--purple)">✏️</span> ${esc(val)}
+    <button class="custom-rule-del" onclick="removeCustomRule(this,'${col}',${ruleIdx})">✕</button>`;
+  list.appendChild(item);
+  input.value = '';
+  toast(`Rule added for ${col}`, 'success');
+}
+
+function removeCustomRule(btn, col, idx) {
+  if (S.customRules[col]) S.customRules[col].splice(idx, 1);
+  btn.closest('.custom-rule-item').remove();
+}
+
+function deleteAiRule(idx, col, ri) {
+  if (S.aiRules[col]) S.aiRules[col].splice(ri, 1);
+  const container = document.getElementById(`air-wrap-${idx}`);
+  if (container && S.aiRules[col]) {
+    container.innerHTML = S.aiRules[col].map((r, i) => `
+      <div class="ai-rule" id="air-${idx}-${i}">
+        <div style="display:flex;gap:6px;align-items:flex-start;">
+          <div class="ai-dot ${r.severity||'Medium'}"></div>
+          <div><div style="font-size:12px;font-weight:600">${r.label||''}</div>
+          <div class="ai-rule-code">${(r.logic||'').substring(0,45)}</div></div>
+        </div>
+        <button onclick="deleteAiRule(${idx},'${col}',${i})"
+          style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 4px;flex-shrink:0">✕</button>
+      </div>`).join('') || '<div style="color:var(--text3);font-size:12px">All AI rules removed</div>';
+  }
+}
+
+function toggleAllRules() {
+  document.querySelectorAll('.ai-rules').forEach(el => {
+    el.style.display = el.style.display === 'none' ? '' : 'none';
+  });
+}
+
+// ═══════════════════════ STEP 4: RUN ═════════════════════
+function proceedToRun() {
+  const allRules = {};
+  if (S.profile) {
+    S.profile.columns.forEach(col => {
+      const ai = S.aiRules[col.column] || [];
+      const custom = (S.customRules[col.column] || []).filter(r => r.logic);
+      allRules[col.column] = [...ai, ...custom];
+    });
+  }
+  S.mergedRules = allRules;
+  markStep(3, 'done'); markStep(4, 'active');
+  document.getElementById('step4').style.display = 'block';
+  document.getElementById('step4').scrollIntoView({behavior:'smooth'});
+}
+
+async function runPipeline() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true; btn.textContent = '⏳ Running...';
+  document.getElementById('console-wrap').style.display = 'block';
+  document.getElementById('console-output').innerHTML = '';
+
+  try {
+    const r = await fetch('/api/run', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({session_id: S.sessionId, column_rules: S.mergedRules})
+    });
+    const d = await r.json();
+    S.runId = d.run_id;
+    log('System', `Pipeline started — Run ID: ${d.run_id}`, 'start');
+    streamLogs(d.run_id);
+  } catch(e) {
+    log('System', 'Failed to start: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = '▶ Run Agentic DQ Analysis';
+  }
+}
+
+function streamLogs(runId) {
+  const es = new EventSource(`/api/run/${runId}/stream`);
+  es.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'done') {
+      es.close();
+      onComplete(runId, data.status);
+      return;
+    }
+    updateAgentStepper(data.agent);
+    log(data.agent || 'System', data.message || '', data.level || 'info');
+  };
+  es.onerror = () => { es.close(); pollStatus(runId); };
+}
+
+function pollStatus(runId) {
+  const iv = setInterval(async () => {
+    const r = await fetch(`/api/run/${runId}/status`);
+    const d = await r.json();
+    if (d.status === 'COMPLETED' || d.status === 'ERROR') {
+      clearInterval(iv); onComplete(runId, d.status);
+    }
+  }, 2000);
+}
+
+async function onComplete(runId, status) {
+  if (status === 'COMPLETED' || status === 'done') {
+    const r = await fetch(`/api/run/${runId}/results`);
+    S.results = await r.json();
+
+    // ── KPI calculations (cell-level, not rule-level) ──────────────────────
+    // Each result has: total (rows checked), affected (rows that failed this rule)
+    // Total Checks  = sum of all rows checked across every rule  = rows × num_rules
+    // Passed cells  = sum of (total - affected) for each rule
+    // Failed cells  = sum of affected for each rule
+    // Pass Rate     = passedCells / totalChecks × 100
+    // AI Rules      = count of rules where source === 'ai'
+    // Tables        = distinct source tables from profile
+
+    const totalChecks  = S.results.reduce((s, x) => s + (x.total || 0), 0);
+    const failedCells  = S.results.reduce((s, x) => s + (x.affected || 0), 0);
+    const passedCells  = totalChecks - failedCells;
+    const rate         = totalChecks > 0 ? Math.round(passedCells / totalChecks * 100) : 0;
+    const aiRulesCount    = S.results.filter(x => x.source === 'ai').length;
+    const customRulesCount = S.results.filter(x => x.source === 'custom').length;
+
+    const tableSet = new Set();
+    S.results.forEach(x => {
+      const cp = (S.profile?.columns || []).find(p => p.column === x.column_name);
+      const tbl = cp?.source_table || S.profile?.table_name;
+      if (tbl) tableSet.add(tbl);
+    });
+    const tablesCount = tableSet.size || (S.profile?.tables?.length ?? 1);
+
+    document.getElementById('r-total').textContent    = totalChecks.toLocaleString();
+    document.getElementById('r-passed').textContent   = passedCells.toLocaleString();
+    document.getElementById('r-failed').textContent   = failedCells.toLocaleString();
+    document.getElementById('r-passrate').textContent = rate + '%';
+    document.getElementById('r-ai-rules').textContent = aiRulesCount;
+    document.getElementById('r-custom-rules').textContent = customRulesCount;
+    document.getElementById('r-tables').textContent   = tablesCount;
+    document.getElementById('inline-results').style.display = 'block';
+    document.getElementById('dl-sidebar').style.display = 'block';
+    log('System', `✅ Complete — ${rate}% pass rate (${passedCells.toLocaleString()} / ${totalChecks.toLocaleString()} cells passed)`, 'done');
+    markStep(4, 'done'); markStep(5, 'active');
+    renderResults(S.results);
+    document.getElementById('step5').style.display = 'block';
+    setTimeout(() => document.getElementById('step5').scrollIntoView({behavior:'smooth'}), 500);
+    toast(`Pipeline complete — ${rate}% pass rate`);
+    ['connector','profiler','validator','fixer','reporter'].forEach(a => {
+      const el = document.getElementById(`ps-${a}`);
+      if (el) { el.classList.remove('active'); el.classList.add('done'); }
+    });
+  } else {
+    log('System', '❌ Pipeline failed', 'error');
+    toast('Pipeline failed', 'error');
+  }
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('run-btn').textContent = '▶ Run Again';
+}
+
+function updateAgentStepper(agent) {
+  const MAP = {Connector:'connector',Profiler:'profiler',Validator:'validator',Fixer:'fixer',Reporter:'reporter'};
+  const key = MAP[agent]; if (!key) return;
+  const ORDER = ['connector','profiler','validator','fixer','reporter'];
+  const idx = ORDER.indexOf(key);
+  ORDER.forEach((a, i) => {
+    const el  = document.getElementById(`ps-${a}`);
+    const lel = document.getElementById(`psl-${a}`);
+    if (!el) return;
+    if (i < idx) { el.classList.add('done'); el.classList.remove('active'); lel.classList.add('done'); lel.classList.remove('active'); }
+    else if (i === idx) { el.classList.add('active'); el.classList.remove('done'); lel.classList.add('active'); lel.classList.remove('done'); }
+  });
+  const COLORS = {connector:'#58a6ff',profiler:'#79c0ff',validator:'#3fb950',fixer:'#f0883e',reporter:'#bc8cff'};
+  document.getElementById('agent-status').innerHTML = ORDER.map((a,i) => {
+    const icon  = i < idx ? '✓' : (i === idx ? '▶' : '○');
+    const color = i < idx ? 'var(--green)' : (i === idx ? 'var(--primary)' : 'var(--text3)');
+    return `<span style="color:${color}">${icon} ${a.charAt(0).toUpperCase()+a.slice(1)}</span>`;
+  }).join('<br>');
+}
+
+const AGENT_COLORS = {connector:'#58a6ff',profiler:'#79c0ff',validator:'#3fb950',fixer:'#f0883e',reporter:'#bc8cff',system:'#8b949e'};
+function log(agent, msg, type_) {
+  const out = document.getElementById('console-output');
+  const color = AGENT_COLORS[(agent||'').toLowerCase()] || '#8b949e';
+  const cls = type_==='done'?'log-done':type_==='error'?'log-error':type_==='start'?'log-start':type_==='warn'?'log-warn':type_==='agent'?'log-agent':'log-info';
+  const ts = new Date().toLocaleTimeString('en-GB');
+  const line = document.createElement('div');
+  line.className = cls;
+  line.innerHTML = `<span style="color:#484f58">${ts}</span>  <span style="color:${color}">[${agent||'System'}]</span>  ${esc(msg)}`;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+// ═══════════════════════ STEP 5: RESULTS ════════════════
+function renderResults(results) {
+  const tbody = document.getElementById('results-tbody');
+
+  // Build column→table lookup from profile
+  const colTableMap = {};
+  (S.profile?.columns||[]).forEach(cp => { colTableMap[cp.column] = cp.source_table || S.profile?.table_name || 'Dataset'; });
+
+  // Attach table to each result
+  results.forEach(r => { r._table = colTableMap[r.column_name] || S.profile?.table_name || 'Dataset'; });
+
+  // Group by table
+  const grouped = {};
+  results.forEach(r => {
+    if (!grouped[r._table]) grouped[r._table] = [];
+    grouped[r._table].push(r);
+  });
+
+  // Build per-table summary cards
+  const cardEl = document.getElementById('table-summary-cards');
+  if (cardEl) {
+    cardEl.innerHTML = Object.entries(grouped).map(([tbl, rows]) => {
+      const tp = rows.filter(x=>x.status==='PASS').length;
+      const tf = rows.filter(x=>x.status!=='PASS').length;
+      const trate = rows.length ? Math.round(tp/rows.length*100) : 0;
+      const color = trate>=80?'var(--green)':trate>=50?'#d97706':'var(--red)';
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;min-width:180px;flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">📄 ${esc(tbl)}</div>
+        <div style="font-size:24px;font-weight:700;color:${color}">${trate}%</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${tp} pass · ${tf} fail · ${rows.length} total rules</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Render table rows grouped by table
+  let html = '';
+  Object.entries(grouped).forEach(([tbl, rows]) => {
+    html += `<tr><td colspan="9" style="background:linear-gradient(90deg,#1e3a5f,#2d1b69);padding:8px 14px;">
+      <span style="font-size:12px;font-weight:700;color:white;letter-spacing:.5px;">📄 ${esc(tbl)}</span>
+      <span style="font-size:11px;color:#bfdbfe;margin-left:8px;">${rows.length} rules · ${rows.filter(x=>x.status==='PASS').length} passed</span>
+    </td></tr>`;
+    rows.forEach(r => {
+      const st = r.status==='PASS'?'badge-pass':r.status==='FAIL'?'badge-fail':'badge-error';
+      const pRec = r.passed_records != null ? r.passed_records : (r.status==='PASS' ? (r.total||0) : ((r.total||0)-(r.affected||0)));
+      const fRec = r.failed_records != null ? r.failed_records : (r.status==='PASS' ? 0 : (r.affected||0));
+      const tRec = r.total_rows    != null ? r.total_rows    : (r.total||0);
+      html += `<tr>
+        <td style="font-size:11px;color:var(--text3);font-family:var(--mono)">${esc(r._table||'—')}</td>
+        <td style="font-family:var(--mono);font-weight:600">${esc(r.column_name||'—')}</td>
+        <td>${esc(r.rule_label||'—')}</td>
+        <td><span class="badge ${st}">${r.status}</span></td>
+        <td style="color:var(--kpmg-green);font-weight:600">${pRec.toLocaleString()} passed</td>
+        <td style="color:var(--kpmg-red);font-weight:600">${fRec.toLocaleString()} failed</td>
+        <td style="color:var(--text3)">${tRec.toLocaleString()} total</td>
+        <td><span class="badge ${r.source==='custom'?'badge-error':'badge-pass'}">${r.source||'ai'}</span></td>
+        <td>${r.fix_applied?'<span style="color:var(--green)">✓</span>':'—'}</td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--gray)">No results yet</td></tr>';
+}
+
+// ═══════════════════════ DASHBOARD ══════════════════════
+// ─── Chart instances (destroy before re-draw) ──────────
+const _charts = {};
+function _destroyChart(id) { if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; } }
+const KPMG_PALETTE = ['#00338D','#005EB8','#00A3E0','#43B02A','#F59F00','#BC2027','#470A68','#009B8D','#6D2077'];
+
+async function showDashboard() {
+  hideAllPanels();
+  document.getElementById('dashboard-panel').style.display = 'block';
+  document.getElementById('dash-timestamp').textContent = new Date().toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
+
+  // ── Fetch aggregate stats ─────────────────────────────────────────────
+  let d = {total_runs:0,total_rules:0,avg_risk:0,recent_runs:[],risk_dist:[]};
+  try { const r = await fetch('/api/dashboard-stats'); d = await r.json(); } catch(e) {}
+
+  const results = S.results || [];
+  const profile = S.profile || {};
+
+  // ── Record-level aggregates ───────────────────────────────────────────
+  const totalRules   = results.length;
+  const total        = totalRules;
+  const totalRecords = results.reduce((a,r) => a + (r.total_rows != null ? r.total_rows : (r.total||0)), 0);
+  const passedRec    = results.reduce((a,r) => r.passed_records != null ? a + r.passed_records : a + ((r.total||0) - (r.affected||0)), 0);
+  const failedRec    = results.reduce((a,r) => r.failed_records != null ? a + r.failed_records : a + (r.affected||0), 0);
+  const passed       = results.filter(r=>r.status==='PASS').length;
+  const failed       = results.filter(r=>r.status!=='PASS').length;
+  const totalRows    = results.length ? (results[0].total_rows || results[0].total || 0) : 0;
+  const avgFailRate  = totalRecords > 0 ? Math.round(failedRec / totalRecords * 100) : 0;
+
+  // Table-level row counts
+  const colTableMap0 = {};
+  (profile.columns||[]).forEach(cp => { colTableMap0[cp.column] = cp.source_table || profile.table_name || 'Dataset'; });
+  const tableRowCounts = profile.table_row_counts || {};
+
+  document.getElementById('d-runs').innerHTML = Object.keys(tableRowCounts).length
+    ? Object.entries(tableRowCounts).map(([t,n])=>`<div style="font-size:11px;line-height:1.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(t)}: ${n.toLocaleString()}"><span style="font-weight:700;color:var(--kpmg-blue)">${esc(t)}</span>: ${n.toLocaleString()}</div>`).join('')
+    : (totalRows || '—');
+  document.getElementById('d-rules').textContent  = totalRules;
+  document.getElementById('d-passed').textContent = passedRec.toLocaleString();
+  document.getElementById('d-failed').textContent = failedRec.toLocaleString();
+  document.getElementById('d-risk').textContent   = avgFailRate + '%';
+
+  // ── Health Score ──────────────────────────────────────────────────────
+  const healthPct = totalRecords > 0 ? Math.round(passedRec / totalRecords * 100) : (total > 0 ? Math.round(passed / total * 100) : null);
+  const hp = document.getElementById('health-pct');
+  const hg = document.getElementById('health-grade');
+  const hd = document.getElementById('health-desc');
+  const arc = document.getElementById('health-arc');
+  const pills = document.getElementById('health-pills');
+  if (healthPct !== null) {
+    const C = 276.46;
+    const grade = healthPct>=90?'EXCELLENT':healthPct>=75?'GOOD':healthPct>=60?'FAIR':healthPct>=40?'POOR':'CRITICAL';
+    const gradeColor = healthPct>=90?'#43B02A':healthPct>=75?'#00A3E0':healthPct>=60?'#F59F00':healthPct>=40?'#BC2027':'#470A68';
+    hp.textContent = healthPct + '%';
+    hg.textContent = grade;
+    arc.setAttribute('stroke-dasharray', `${C * healthPct / 100} ${C}`);
+    arc.setAttribute('stroke', gradeColor);
+    hd.textContent = `Overall data quality health is ${grade}. ${failed} check${failed!==1?'s':''} failed out of ${total} total validation rules executed. Pass rate: ${Math.round(passedRec/Math.max(totalRecords,1)*100)}%.`;
+    const colTableMap = {};
+    (profile.columns||[]).forEach(cp => { colTableMap[cp.column] = cp.source_table || profile.table_name || 'Dataset'; });
+    const tables = [...new Set(Object.values(colTableMap))];
+    pills.innerHTML = tables.map(t=>`<span class="hpill">📄 ${esc(t)}</span>`).join('') +
+      `<span class="hpill">${total} Rules</span><span class="hpill">${(profile.columns||[]).length} Columns</span>`;
+  } else {
+    hp.textContent = '—'; hg.textContent = 'N/A';
+    hd.textContent = 'Run a pipeline to compute the health score.';
+    arc.setAttribute('stroke-dasharray', '0 276.46');
+    pills.innerHTML = '';
+  }
+
+  // ── Executive Summary ─────────────────────────────────────────────────
+  const execEl = document.getElementById('exec-summary-body');
+  if (total > 0) {
+    const critFails = results.filter(r=>r.status==='FAIL' && r.severity==='High');
+    const warnFails = results.filter(r=>r.status==='FAIL' && r.severity==='Medium');
+    const passRate  = total > 0 ? Math.round(passed/total*100) : 0;
+    const colTableMap2 = {};
+    (profile.columns||[]).forEach(cp => { colTableMap2[cp.column] = cp.source_table || profile.table_name || 'Dataset'; });
+    const failedCols = [...new Set(results.filter(r=>r.status==='FAIL').map(r=>r.column_name))];
+    execEl.innerHTML = `
+      <p>This pipeline validated <strong>${total} checks</strong> across <strong>${(profile.columns||[]).length} columns</strong>, achieving a <strong>${passRate}% pass rate</strong>. ${critFails.length} critical and ${warnFails.length} medium-severity issues were identified.</p>
+      ${critFails.length > 0 ? `<div class="exec-finding critical">⛔ <div><strong>Critical Issues (${critFails.length})</strong><br>${critFails.slice(0,3).map(f=>`${f.column_name}: ${f.rule_label}`).join(' · ')}${critFails.length>3?' · and more...':''}</div></div>` : ''}
+      ${warnFails.length > 0 ? `<div class="exec-finding warning">⚠️ <div><strong>Warnings (${warnFails.length})</strong><br>${warnFails.slice(0,2).map(f=>`${f.column_name}: ${f.rule_label}`).join(' · ')}${warnFails.length>2?' · ...':''}</div></div>` : ''}
+      ${passRate >= 80 ? `<div class="exec-finding good">✅ <div><strong>Strong compliance</strong> — ${passRate}% of checks passed. Data is suitable for downstream use with minor remediation.</div></div>` : ''}
+      ${failedCols.length > 0 ? `<p style="font-size:11px;color:var(--text3);margin-top:8px">Columns requiring attention: <strong>${failedCols.slice(0,5).join(', ')}${failedCols.length>5?' and '+(failedCols.length-5)+' more':''}</strong></p>` : ''}`;
+  } else {
+    execEl.innerHTML = '<p style="color:var(--text3);font-size:12px;">Run a pipeline to generate the executive summary.</p>';
+  }
+
+  // ── Chart 1: Validation Results Distribution (Donut) ─────────────────
+  _destroyChart('distribution');
+  const errors = results.filter(r=>r.status==='ERROR').length;
+  const ctx1 = document.getElementById('chart-distribution');
+  if (ctx1) {
+    _charts['distribution'] = new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: ['Pass','Fail','Error'],
+        datasets: [{
+          data: [passedRec, failedRec, results.filter(r=>r.status==='ERROR').reduce((a,r)=>a+(r.total_rows||0),0)],
+          backgroundColor: ['#43B02A','#BC2027','#F59F00'],
+          borderWidth: 2, borderColor: 'white'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 11 }, padding: 12 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString()} records (${totalRecords?Math.round(ctx.raw/totalRecords*100):0}%)` } }
+        }
+      }
+    });
+  }
+
+  // ── Chart 2: Failing Columns descending bar ───────────────────────────
+  _destroyChart('failing-cols');
+  const colFailMap = {};
+  // Use failed_records if set, else affected, else count 1 per FAIL rule
+  results.filter(r=>r.status==='FAIL').forEach(r => {
+    const n = (r.failed_records != null && r.failed_records > 0) ? r.failed_records
+            : (r.affected        != null && r.affected        > 0) ? r.affected
+            : 1;
+    colFailMap[r.column_name] = (colFailMap[r.column_name]||0) + n;
+  });
+  const sortedFails = Object.entries(colFailMap).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  // Always use a fresh canvas — never replace it with innerHTML (kills the element)
+  const fc2wrap = document.getElementById('chart-failing-cols')?.parentElement;
+  if (fc2wrap) {
+    fc2wrap.innerHTML = sortedFails.length
+      ? '<canvas id="chart-failing-cols"></canvas>'
+      : '<div style="color:var(--text3);font-size:12px;padding:60px 0;text-align:center;">No failures to display.</div>';
+  }
+  const ctx2 = document.getElementById('chart-failing-cols');
+  if (ctx2 && sortedFails.length) {
+    _charts['failing-cols'] = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: sortedFails.map(([col])=>{ const t=colTableMap0[col]||''; return t ? `[${t}] ${col}` : col; }),
+        datasets: [{ label: 'Failed Records', data: sortedFails.map(([,n])=>n),
+          backgroundColor: sortedFails.map((_,i)=>i===0?'#BC2027':i<3?'#F59F00':'#005EB8'),
+          borderRadius: 4 }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.raw} failed records` } } },
+        scales: {
+          x: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10 } } },
+          y: { ticks: { font: { size: 10, family: 'JetBrains Mono' } } }
+        }
+      }
+    });
+  }
+
+  // ── Chart 3: Column-level Null % per table ────────────────────────────
+  _destroyChart('nulls');
+  const colTableMap3 = {};
+  (profile.columns||[]).forEach(cp => { colTableMap3[cp.column] = cp.source_table || profile.table_name || 'Dataset'; });
+  const nullCols = (profile.columns||[]).filter(c=>c.null_count>0).slice(0,20);
+  const ctx3 = document.getElementById('chart-nulls');
+  if (ctx3 && nullCols.length) {
+    const tableColors = {};
+    const uniqueTables = [...new Set(nullCols.map(c=>c.source_table||profile.table_name||'Dataset'))];
+    uniqueTables.forEach((t,i) => { tableColors[t] = KPMG_PALETTE[i % KPMG_PALETTE.length]; });
+    _charts['nulls'] = new Chart(ctx3, {
+      type: 'bar',
+      data: {
+        labels: nullCols.map(c=>c.column),
+        datasets: uniqueTables.map((tbl,i) => ({
+          label: tbl,
+          data: nullCols.map(c => (c.source_table||profile.table_name||'Dataset')===tbl ? Math.round(c.null_count/c.total*100) : null),
+          backgroundColor: KPMG_PALETTE[i % KPMG_PALETTE.length],
+          borderRadius: 3,
+        }))
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font:{size:10}, padding:10 } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}% nulls` } } },
+        scales: {
+          x: { ticks: { font:{size:10,family:'JetBrains Mono'}, maxRotation:35 } },
+          y: { ticks: { callback: v => v+'%', font:{size:10} }, grid:{color:'#f0f0f0'}, max:100 }
+        }
+      }
+    });
+  } else if (ctx3) {
+    ctx3.parentElement.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:60px 0;text-align:center;">No null issues detected 🎉</div>';
+  }
+
+  // ── Chart 4: Checks per column ────────────────────────────────────────
+  _destroyChart('checks-per-col');
+  const checksMap = {};
+  results.forEach(r => { checksMap[r.column_name] = (checksMap[r.column_name]||0)+1; });
+  const sortedChecks = Object.entries(checksMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const ctx4 = document.getElementById('chart-checks-per-col');
+  if (ctx4 && sortedChecks.length) {
+    _charts['checks-per-col'] = new Chart(ctx4, {
+      type: 'bar',
+      data: {
+        labels: sortedChecks.map(([col])=>{ const t=colTableMap0[col]||''; return t ? `[${t}] ${col}` : col; }),
+        datasets: [{ label: 'Checks', data: sortedChecks.map(([,n])=>n),
+          backgroundColor: '#005EB8', borderRadius: 4 }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{display:false} },
+        scales: {
+          x: { grid:{color:'#f0f0f0'}, ticks:{font:{size:10}} },
+          y: { ticks:{font:{size:10,family:'JetBrains Mono'}} }
+        }
+      }
+    });
+  }
+
+  // ── Token Usage & Cost (Model Routing) ────────────────────────────────
+  const tokenEl = document.getElementById('token-model-breakdown');
+  const agentTokens = [
+    { name: 'gemini-2.0-flash', role: 'Profiler + Fixer + Rules + Schema', tokens: total * 420, cost: total * 0.000021 },
+    { name: 'validator-pandas', role: 'Validator (pure pandas, no LLM)', tokens: 0, cost: 0 },
+  ];
+  const maxTok = Math.max(...agentTokens.map(a=>a.tokens), 1);
+  tokenEl.innerHTML = `
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Estimated based on ${total} checks executed</div>
+    ${agentTokens.map(a => `
+    <div class="token-model-row">
+      <div class="token-model-name">${esc(a.name)}</div>
+      <div style="flex:1;margin:0 10px;">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;">${a.role}</div>
+        <div class="token-bar-wrap"><div class="token-bar-fill" style="width:${Math.round(a.tokens/maxTok*100)}%"></div></div>
+      </div>
+      <div class="token-cost">~${a.tokens.toLocaleString()} tok<br><strong style="color:var(--kpmg-blue)">$${a.cost.toFixed(4)}</strong></div>
+    </div>`).join('')}
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);">
+      ℹ️ Validator runs as pure-pandas (zero API cost). Only Profiler, Fixer, Rules, and Schema agents call the LLM.
+    </div>`;
+
+  // ── Recent Runs Table ─────────────────────────────────────────────────
+  const riskC = {LOW:'badge-pass',MEDIUM:'badge-med',HIGH:'badge-high',CRITICAL:'badge-crit'};
+  document.getElementById('dash-runs-body').innerHTML = (d.recent_runs||[]).map(run => `<tr>
+    <td style="font-family:var(--mono);font-size:11px;">${run.run_id}</td>
+    <td style="font-size:11px;color:var(--gray)">${(run.started_at||'').substring(0,16)}</td>
+    <td>${run.total_checks||0}</td>
+    <td style="color:var(--kpmg-green);font-weight:600">${run.passed||0}</td>
+    <td style="color:var(--kpmg-red);font-weight:600">${run.failed||0}</td>
+    <td><span class="badge ${riskC[run.risk_level]||'badge-skip'}">${run.risk_level||'—'}</span></td>
+    <td><span class="badge ${run.status==='COMPLETED'?'badge-pass':'badge-fail'}">${run.status||'—'}</span></td>
+  </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray)">No runs yet — run a pipeline first.</td></tr>';
+}
+
+async function showRunHistory() {
+  hideAllPanels();
+  document.getElementById('run-history-panel').style.display = 'block';
+  const r = await fetch('/api/runs');
+  const runs = await r.json();
+  const riskC = {LOW:'badge-pass',MEDIUM:'badge-med',HIGH:'badge-high',CRITICAL:'badge-crit'};
+  document.getElementById('run-hist-body').innerHTML = runs.map(r => `<tr>
+    <td style="font-family:var(--mono)">${r.run_id}</td>
+    <td style="font-size:11px;color:var(--gray)">${(r.started_at||'').substring(0,16)}</td>
+    <td>${r.total_checks||0}</td>
+    <td style="color:var(--green)">${r.passed||0}</td>
+    <td style="color:var(--red)">${r.failed||0}</td>
+    <td><span class="badge ${riskC[r.risk_level]||'badge-skip'}">${r.risk_level||'—'}</span></td>
+    <td><span class="badge ${r.status==='COMPLETED'?'badge-pass':'badge-fail'}">${r.status||'—'}</span></td>
+  </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--gray)">No runs yet</td></tr>';
+}
+
+async function downloadCleaned() {
+  if (!S.runId) { toast('Run pipeline first', 'error'); return; }
+  window.open(`/api/run/${S.runId}/download`);
+}
+
+// ═══════════════════════ UTILS ══════════════════════════
+function markStep(n, state) {
+  const num = document.getElementById(`snum${n}`);
+  const sb  = document.getElementById(`sb${n}`);
+  if (state === 'done') {
+    if (num) { num.className = 'step-num done'; num.textContent = '✓'; }
+    if (sb)  { sb.className = 'step-badge done'; sb.textContent = '✓'; }
+  } else if (state === 'active') {
+    if (num) { num.className = 'step-num'; num.textContent = n; }
+    if (sb)  { sb.className = 'step-badge'; sb.textContent = n; }
+  }
+}
+
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:'smooth'});
+}
+
+function hideAllPanels() {
+  ['dashboard-panel','run-history-panel'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+}
+function hidePanel(id) { document.getElementById(id).style.display = 'none'; }
+
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type==='success'?'✓ ':type==='error'?'✗ ':'ℹ ') + msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ─── RULE MODAL ───────────────────────────────────────────────
+var _modalCol = null, _modalIdx = null;
+var RULE_TYPES = [
+  {id:'empty_check',    label:'Empty Check',    icon:'⚠️'},
+  {id:'range',          label:'Range',          icon:'📊'},
+  {id:'allowed_values', label:'Allowed Values', icon:'✅'},
+  {id:'unique',         label:'Unique',         icon:'🔑'},
+  {id:'email',          label:'Email',          icon:'📧'},
+  {id:'phone',          label:'Phone',          icon:'📞'},
+  {id:'date',           label:'Date',           icon:'📅'},
+  {id:'is_number',      label:'Is Number',      icon:'🔢'},
+  {id:'pattern_regex',  label:'Pattern/Regex',  icon:'🔤'},
+  {id:'length',         label:'Length',         icon:'📏'},
+  {id:'no_whitespace',  label:'No Whitespace',  icon:'✂️'},
+  {id:'positive',       label:'Positive',       icon:'➕'}
+];
+
+function openRuleModal(col, idx) {
+  _modalCol = col; _modalIdx = idx;
+  document.getElementById('rmod-col').textContent = col;
+  rmodShowGrid();
+  document.getElementById('rule-modal-overlay').classList.add('open');
+}
+function closeRuleModal() {
+  document.getElementById('rule-modal-overlay').classList.remove('open');
+  _modalCol = null; _modalIdx = null;
+}
+function rmodShowGrid() {
+  var html = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:14px;">SELECT RULE TYPE</div><div class="rule-type-grid">';
+  RULE_TYPES.forEach(function(r) {
+    html += '<div class="rule-type-card" onclick="rmodShowConfig(\''+r.id+'\')"><div class="rule-type-icon">'+r.icon+'</div><div class="rule-type-label">'+r.label+'</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('rule-modal-body').innerHTML = html;
+}
+function rmodShowConfig(ruleId) {
+  var rule = RULE_TYPES.find(function(r){return r.id===ruleId;});
+  var fields = rmodGetFields(ruleId);
+  var html = '<button class="rf-back" onclick="rmodShowGrid()">← Back</button>'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">'
+    + '<span style="font-size:28px;">'+rule.icon+'</span>'
+    + '<div><div style="font-weight:700;font-size:15px;color:#1e293b;">'+rule.label+'</div>'
+    + '<div style="font-size:12px;color:#6b7280;">Configure for column: <strong>'+esc(_modalCol)+'</strong></div></div></div>'
+    + '<div id="rmod-fields">'+fields+'</div>'
+    + '<div class="rf-actions">'
+    + '<button class="rf-btn-cancel" onclick="closeRuleModal()">Cancel</button>'
+    + '<button class="rf-btn-add" onclick="rmodSave(\''+ruleId+'\')">Add Rule</button>'
+    + '</div>';
+  document.getElementById('rule-modal-body').innerHTML = html;
+  // wire up date format toggle
+  if (ruleId === 'date') {
+    var sel = document.getElementById('rc-date-fmt');
+    if (sel) sel.addEventListener('change', function() {
+      var wrap = document.getElementById('rc-date-custom-wrap');
+      if (wrap) wrap.style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+  }
+}
+function rmodGetFields(ruleId) {
+  if (ruleId === 'empty_check') {
+    return '<div class="rf-group"><label class="rf-label">Severity</label>'
+      +'<select class="rf-select" id="rc-severity"><option value="High">High</option><option value="Medium" selected>Medium</option><option value="Low">Low</option></select></div>'
+      +'<div class="rf-desc">Flags any row where this column is null or empty.</div>';
+  }
+  if (ruleId === 'range') {
+    return '<div class="rf-grid2">'
+      +'<div class="rf-group"><label class="rf-label">Minimum Value</label><input class="rf-input" id="rc-min" type="number" placeholder="e.g. 0"></div>'
+      +'<div class="rf-group"><label class="rf-label">Maximum Value</label><input class="rf-input" id="rc-max" type="number" placeholder="e.g. 1000"></div>'
+      +'</div>'
+      +'<div class="rf-group"><label class="rf-label">Bounds</label>'
+      +'<select class="rf-select" id="rc-inclusive"><option value="inclusive">Inclusive (min \u2264 value \u2264 max)</option><option value="exclusive">Exclusive (min &lt; value &lt; max)</option></select></div>'
+      +'<div class="rf-desc">Validates that numeric values fall within the specified range.</div>';
+  }
+  if (ruleId === 'allowed_values') {
+    return '<div class="rf-group"><label class="rf-label">Allowed Values <span style="font-weight:400;color:#94a3b8">(one per line or comma-separated)</span></label>'
+      +'<textarea class="rf-textarea" id="rc-values" rows="5" placeholder="e.g.\nActive\nInactive\nPending"></textarea></div>'
+      +'<div class="rf-group"><label class="rf-label">Case Sensitive</label>'
+      +'<select class="rf-select" id="rc-case"><option value="no">No (case-insensitive)</option><option value="yes">Yes</option></select></div>'
+      +'<div class="rf-desc">Value must match one of the listed entries exactly.</div>';
+  }
+  if (ruleId === 'unique') {
+    return '<div class="rf-group"><label class="rf-label">Scope</label>'
+      +'<select class="rf-select" id="rc-scope"><option value="column">Within this column</option><option value="dataset">Across full dataset</option></select></div>'
+      +'<div class="rf-desc">Checks that each value appears only once — no duplicates.</div>';
+  }
+  if (ruleId === 'email') {
+    return '<div class="rf-group"><label class="rf-label">Allowed Domains <span style="font-weight:400;color:#94a3b8">(optional, comma-separated)</span></label>'
+      +'<input class="rf-input" id="rc-domains" placeholder="e.g. gmail.com, company.org"></div>'
+      +'<div class="rf-desc">Validates properly formatted email address (contains @ and valid domain).</div>';
+  }
+  if (ruleId === 'phone') {
+    return '<div class="rf-group"><label class="rf-label">Phone Format</label>'
+      +'<select class="rf-select" id="rc-phone-fmt">'
+      +'<option value="any">Any format (digits + separators)</option>'
+      +'<option value="us">US: (XXX) XXX-XXXX</option>'
+      +'<option value="intl">International: +[country] XXXXXXXXXX</option>'
+      +'<option value="digits">Digits only (10 digits)</option>'
+      +'</select></div>'
+      +'<div class="rf-desc">Validates that the value is a valid phone number.</div>';
+  }
+  if (ruleId === 'date') {
+    return '<div class="rf-group"><label class="rf-label">Date Format</label>'
+      +'<select class="rf-select" id="rc-date-fmt">'
+      +'<option value="YYYY-MM-DD">YYYY-MM-DD (ISO 8601)</option>'
+      +'<option value="DD-MM-YYYY">DD-MM-YYYY</option>'
+      +'<option value="MM-DD-YYYY">MM-DD-YYYY</option>'
+      +'<option value="DD/MM/YYYY">DD/MM/YYYY</option>'
+      +'<option value="MM/DD/YYYY">MM/DD/YYYY</option>'
+      +'<option value="YYYY/MM/DD">YYYY/MM/DD</option>'
+      +'<option value="DD MMM YYYY">DD MMM YYYY (e.g. 01 Jan 2024)</option>'
+      +'<option value="timestamp">Unix Timestamp (integer)</option>'
+      +'<option value="iso8601">ISO 8601 with time (YYYY-MM-DDTHH:MM:SS)</option>'
+      +'<option value="custom">Custom format...</option>'
+      +'</select></div>'
+      +'<div id="rc-date-custom-wrap" style="display:none"><div class="rf-group"><label class="rf-label">Custom Format</label>'
+      +'<input class="rf-input" id="rc-date-custom" placeholder="e.g. YYYY.MM.DD"></div></div>'
+      +'<div class="rf-grid2">'
+      +'<div class="rf-group"><label class="rf-label">Min Date <span style="font-weight:400;color:#94a3b8">(optional)</span></label><input class="rf-input" id="rc-date-min" type="date"></div>'
+      +'<div class="rf-group"><label class="rf-label">Max Date <span style="font-weight:400;color:#94a3b8">(optional)</span></label><input class="rf-input" id="rc-date-max" type="date"></div>'
+      +'</div>'
+      +'<div class="rf-desc">Validates the value is a valid date in the selected format.</div>';
+  }
+  if (ruleId === 'is_number') {
+    return '<div class="rf-group"><label class="rf-label">Number Type</label>'
+      +'<select class="rf-select" id="rc-num-type">'
+      +'<option value="any">Any numeric (integer or decimal)</option>'
+      +'<option value="integer">Integer only (no decimals)</option>'
+      +'<option value="decimal">Decimal / Float</option>'
+      +'<option value="digits">Digits-only string</option>'
+      +'</select></div>'
+      +'<div class="rf-group"><label class="rf-label">Allow Negative Values</label>'
+      +'<select class="rf-select" id="rc-allow-neg"><option value="yes">Yes</option><option value="no">No (positive only)</option></select></div>'
+      +'<div class="rf-desc">Checks the column value is a valid number with no letters or symbols.</div>';
+  }
+  if (ruleId === 'pattern_regex') {
+    return '<div class="rf-group"><label class="rf-label">Regex Pattern</label>'
+      +'<input class="rf-input" id="rc-pattern" placeholder="e.g. ^[A-Z][0-9]{4}$" style="font-family:monospace;"></div>'
+      +'<div class="rf-group"><label class="rf-label">Case Sensitive</label>'
+      +'<select class="rf-select" id="rc-regex-case"><option value="yes">Yes</option><option value="no">No</option></select></div>'
+      +'<div class="rf-desc">Value must match the specified regular expression.</div>';
+  }
+  if (ruleId === 'length') {
+    return '<div class="rf-grid2">'
+      +'<div class="rf-group"><label class="rf-label">Min Length</label><input class="rf-input" id="rc-len-min" type="number" min="0" placeholder="e.g. 1"></div>'
+      +'<div class="rf-group"><label class="rf-label">Max Length</label><input class="rf-input" id="rc-len-max" type="number" min="0" placeholder="e.g. 255"></div>'
+      +'</div>'
+      +'<div class="rf-group"><label class="rf-label">Measure</label>'
+      +'<select class="rf-select" id="rc-len-type"><option value="chars">Characters</option><option value="words">Words</option><option value="bytes">Bytes</option></select></div>'
+      +'<div class="rf-desc">String length must fall within the specified range.</div>';
+  }
+  if (ruleId === 'no_whitespace') {
+    return '<div class="rf-group"><label class="rf-label">Check Type</label>'
+      +'<select class="rf-select" id="rc-ws-type">'
+      +'<option value="leading_trailing">Leading or trailing whitespace</option>'
+      +'<option value="any">Any whitespace anywhere in value</option>'
+      +'<option value="leading">Leading whitespace only</option>'
+      +'<option value="trailing">Trailing whitespace only</option>'
+      +'</select></div>'
+      +'<div class="rf-desc">Ensures column values do not contain unwanted spaces.</div>';
+  }
+  if (ruleId === 'positive') {
+    return '<div class="rf-group"><label class="rf-label">Positive Definition</label>'
+      +'<select class="rf-select" id="rc-pos-type">'
+      +'<option value="gt0">Strictly greater than 0 (value &gt; 0)</option>'
+      +'<option value="gte0">Greater than or equal to 0 (value \u2265 0)</option>'
+      +'</select></div>'
+      +'<div class="rf-desc">Ensures the numeric value is positive.</div>';
+  }
+  return '<div class="rf-desc">No additional configuration needed.</div>';
+}
+function rmodSave(ruleId) {
+  var rule = RULE_TYPES.find(function(r){return r.id===ruleId;});
+  var logic = '', label = '';
+  try {
+    if (ruleId === 'empty_check') {
+      var sev = document.getElementById('rc-severity').value;
+      logic = 'must not be empty or null [severity:'+sev+']';
+      label = 'Empty Check ('+sev+')';
+    } else if (ruleId === 'range') {
+      var mn = document.getElementById('rc-min').value;
+      var mx = document.getElementById('rc-max').value;
+      if (!mn && !mx) { toast('Enter at least min or max value','error'); return; }
+      var inc = document.getElementById('rc-inclusive').value;
+      logic = 'must be '+(inc==='inclusive'?'between':'strictly between')+' '+(mn||'-\u221e')+' and '+(mx||'+\u221e');
+      label = 'Range: '+(mn||'*')+' \u2013 '+(mx||'*')+' ('+(inc)+')';
+    } else if (ruleId === 'allowed_values') {
+      var raw = document.getElementById('rc-values').value.trim();
+      if (!raw) { toast('Enter at least one allowed value','error'); return; }
+      var vals = raw.split(/[\n,]/).map(function(v){return v.trim();}).filter(Boolean);
+      var cs = document.getElementById('rc-case').value==='yes';
+      logic = 'must be one of: ['+vals.join(', ')+']'+(cs?' (case-sensitive)':'');
+      label = 'Allowed: '+vals.slice(0,3).join(', ')+(vals.length>3?'\u2026':'');
+    } else if (ruleId === 'unique') {
+      var scope = document.getElementById('rc-scope').value;
+      logic = 'each value must be unique '+(scope==='column'?'within this column':'across full dataset');
+      label = 'Unique ('+scope+')';
+    } else if (ruleId === 'email') {
+      var domains = document.getElementById('rc-domains').value.trim();
+      logic = 'must be a valid email address'+(domains?'; allowed domains: '+domains:'');
+      label = 'Valid Email'+(domains?' ('+domains+')':'');
+    } else if (ruleId === 'phone') {
+      var fmt = document.getElementById('rc-phone-fmt').value;
+      var fmtMap = {any:'any format',us:'US (XXX) XXX-XXXX',intl:'International +XX',digits:'10 digits only'};
+      logic = 'must be a valid phone number: '+fmtMap[fmt];
+      label = 'Phone ('+fmtMap[fmt]+')';
+    } else if (ruleId === 'date') {
+      var dfmt = document.getElementById('rc-date-fmt').value;
+      var customFmt = dfmt==='custom'?(document.getElementById('rc-date-custom')||{}).value||'':'';
+      if (dfmt==='custom'&&!customFmt) { toast('Enter a custom date format','error'); return; }
+      var displayFmt = dfmt==='custom'?customFmt:dfmt;
+      var dmin = document.getElementById('rc-date-min').value;
+      var dmax = document.getElementById('rc-date-max').value;
+      logic = 'must be a valid date in '+displayFmt+' format'+(dmin?'; not before '+dmin:'')+(dmax?'; not after '+dmax:'');
+      label = 'Date ('+displayFmt+')'+(dmin||dmax?' ['+(dmin||'*')+' \u2013 '+(dmax||'*')+']':'');
+    } else if (ruleId === 'is_number') {
+      var nt = document.getElementById('rc-num-type').value;
+      var neg = document.getElementById('rc-allow-neg').value;
+      var ntMap = {any:'numeric (int or decimal)',integer:'integer only',decimal:'decimal/float',digits:'digits-only string'};
+      logic = 'must be a '+ntMap[nt]+(neg==='no'?', positive only':'');
+      label = 'Is Number ('+ntMap[nt]+')';
+    } else if (ruleId === 'pattern_regex') {
+      var pat = document.getElementById('rc-pattern').value.trim();
+      if (!pat) { toast('Enter a regex pattern','error'); return; }
+      var rcs = document.getElementById('rc-regex-case').value==='yes';
+      logic = 'must match pattern: '+pat+(rcs?'':' (case-insensitive)');
+      label = 'Regex: '+pat;
+    } else if (ruleId === 'length') {
+      var lmin = document.getElementById('rc-len-min').value;
+      var lmax = document.getElementById('rc-len-max').value;
+      if (!lmin && !lmax) { toast('Enter at least min or max length','error'); return; }
+      var lt = document.getElementById('rc-len-type').value;
+      logic = 'length in '+lt+' must be between '+(lmin||0)+' and '+(lmax||'unlimited');
+      label = 'Length '+(lmin||'0')+'\u2013'+(lmax||'\u221e')+' '+lt;
+    } else if (ruleId === 'no_whitespace') {
+      var wt = document.getElementById('rc-ws-type').value;
+      var wtMap = {leading_trailing:'no leading/trailing whitespace',any:'no whitespace anywhere',leading:'no leading whitespace',trailing:'no trailing whitespace'};
+      logic = 'must not have '+wtMap[wt];
+      label = 'No Whitespace ('+wt.replace('_',' ')+')';
+    } else if (ruleId === 'positive') {
+      var pt = document.getElementById('rc-pos-type').value;
+      logic = pt==='gt0'?'must be a positive number greater than 0':'must be greater than or equal to 0';
+      label = pt==='gt0'?'Positive (> 0)':'Non-negative (\u2265 0)';
+    } else {
+      logic = rule.label+' rule'; label = rule.label;
+    }
+  } catch(e) { toast('Error reading config','error'); return; }
+
+  var col = _modalCol, idx = _modalIdx;
+  S.customRules[col] = S.customRules[col] || [];
+  S.customRules[col].push({logic:logic, label:label, severity:'Medium', source:'custom'});
+  var list = document.getElementById('cl-'+idx);
+  var item = document.createElement('div');
+  item.className = 'custom-rule-item';
+  var ruleIdx = S.customRules[col].length - 1;
+  item.innerHTML = '<span>'+rule.icon+'</span> <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+esc(label)+'">'+esc(label)+'</span>'
+    +'<button class="custom-rule-del" onclick="removeCustomRule(this,\''+col+'\','+ruleIdx+')">✕</button>';
+  list.appendChild(item);
+  closeRuleModal();
+  toast('Rule added for '+col,'success');
+}
+</script>
+
+<!-- Rule Modal -->
+<div id="rule-modal-overlay" class="rule-modal-overlay" onclick="if(event.target===this)closeRuleModal()">
+  <div class="rule-modal-box">
+    <div class="rule-modal-header">
+      <div>
+        <div class="rule-modal-title">✏️ Add Custom Rule</div>
+        <div class="rule-modal-col">Column: <strong id="rmod-col"></strong></div>
+      </div>
+      <button class="rule-modal-close" onclick="closeRuleModal()">✕</button>
+    </div>
+    <div id="rule-modal-body" class="rule-modal-body"></div>
+  </div>
+</div>
+
+</body>
+</html>
